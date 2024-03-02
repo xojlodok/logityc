@@ -1,0 +1,15 @@
+.idea
+.vscode/
+
+# macos file system
+.DS_Store
+
+# Dependencies
+/node_modules
+
+# Logs
+yarn-debug.log*
+yarn-error.log*
+
+# env files
+.env
