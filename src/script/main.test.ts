@@ -1,10 +1,10 @@
+import { refuelAllCars } from '../utils/method';
 import { clickIsVisible } from './../utils/utils';
-import { Locator, Page, selectors, test } from '@playwright/test';
+import { Locator, Page, test } from '@playwright/test';
 require('dotenv').config();
 
+let i: number = 0;
 let page: Page;
-let fuelStation: Locator;
-let refuelButton: Locator;
 let warehouse: Locator;
 let avaliableCountLocator: Locator;
 let trips: Locator;
@@ -13,16 +13,17 @@ let workers: Locator;
 let garage: Locator;
 let tableAvaliable: Locator;
 let rowAvaliable: Locator;
+let orderNumber: Locator;
 let actionTitle: Locator;
 let actionButton: Locator;
-let selectRandomItem: Locator;
+let selectRandomWorkers: Locator;
+let selectRandomTruck: Locator;
+let selectRandonTrailer: Locator;
 let workerToSleep: Locator;
 let activeRepairButton: Locator;
 
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage();
-  fuelStation = page.locator('[id="menuitem-fuelstation"]');
-  refuelButton = page.getByText('Обычная заправка').first();
   warehouse = page.locator('[id="menuitem-warehouse"]');
   avaliableCountLocator = page.locator('[id="tripsavailableamount"]');
   trips = page.locator('[id="menuitem-trips"]');
@@ -34,9 +35,22 @@ test.beforeAll(async ({ browser }) => {
   workers = page.locator('[id="menuitem-employees"]');
   garage = page.locator('[id="menuitem-garage"]');
   tableAvaliable = page.locator('[id="tbody-available"]');
-  rowAvaliable = tableAvaliable.locator('tr').first();
-  actionTitle = page.locator('[class="portlet-title"]').first();
-  selectRandomItem = page.locator('.portlet', { hasText: /Доступно/ }).getByText('Случайный');
+  rowAvaliable = tableAvaliable.locator('tr');
+  orderNumber = rowAvaliable.locator('td').nth(4);
+  actionTitle = page.locator('[class="portlet-wtitle"]').first();
+
+  selectRandomWorkers = page
+    .locator('[class="portlet blue-hoki box"]', { hasText: /Доступно/ })
+    .getByText('Случайный');
+
+  selectRandomTruck = page
+    .locator('[class="portlet purple-plum box"]', { hasText: /Доступно/ })
+    .getByText('Случайный');
+
+  selectRandonTrailer = page
+    .locator('[class="portlet red-sunglo box"]', { hasText: /Доступно/ })
+    .getByText('Случайный');
+
   actionButton = actionTitle.locator('button').first();
   workerToSleep = page
     .locator('tr', { hasText: 'Ничего' })
@@ -56,37 +70,53 @@ test('main script', async () => {
   await page.keyboard.press('Enter');
 
   while (true) {
-    // TODO gotoFuelStation(page)
-    await fuelStation.click();
-    await clickIsVisible(refuelButton);
+    // Заправка
+    await refuelAllCars(page);
+    await page.waitForTimeout(1000);
+
+    // Ремонт
+    // TODO gotogarage
+    await garage.click();
+    await page.waitForTimeout(700);
+
+    for (const repair of await activeRepairButton.all()) {
+      await clickIsVisible(repair);
+    }
 
     // TODO gotoWarehouse(page)
     await warehouse.click();
-    await page.waitForTimeout(700);
 
-    await clickIsVisible(rowAvaliable);
-    for (const item of await selectRandomItem.all()) {
-      await item.click();
+    let orderNumberArray = [];
+    for (const row of await rowAvaliable.all()) {
+      orderNumberArray.push(await row.locator('td').nth(4).textContent());
     }
-    // await clickIsVisible(selectRandomItem);
-    await clickIsVisible(actionButton);
 
-    await page.waitForTimeout(500);
+    for (const orderNumber of orderNumberArray) {
+      await page.locator('td', { hasText: orderNumber }).nth(1).click();
+      // await page.waitForLoadState('domcontentloaded');
+      await clickIsVisible(selectRandomWorkers);
+      await selectRandomWorkers.waitFor({ state: 'hidden' });
+      await clickIsVisible(selectRandomTruck);
+      await selectRandomTruck.waitFor({ state: 'hidden' });
+      await clickIsVisible(selectRandonTrailer);
+      await selectRandonTrailer.waitFor({ state: 'hidden' });
+      await page.waitForLoadState('domcontentloaded');
+      await clickIsVisible(actionButton);
+      await page.waitForLoadState('domcontentloaded');
+    }
+
     await warehouse.click();
-    await page.waitForTimeout(500);
-    await warehouse.click();
+    await avaliableCountLocator.waitFor();
 
     let availableCount = Number(await avaliableCountLocator.textContent());
 
     // TODO goToTrips
     await trips.click();
     if (availableCount == 0 && (await avaliableTrip.first().isVisible())) {
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(200);
+      await page.waitForLoadState('domcontentloaded');
       await avaliableTrip.first().click();
-      await page.waitForTimeout(200);
       await page.locator('[id="submit-trips"]').click();
-      await page.waitForTimeout(200);
+      await page.waitForLoadState('domcontentloaded');
     }
 
     // TODO  gotoWorkers
@@ -98,14 +128,9 @@ test('main script', async () => {
       await page.getByText('Сон').click();
     }
 
-    // TODO gotogarage
-    await garage.click();
-    await page.waitForTimeout(700);
-
-    // for (const repairButtonInArray of await activeRepairButton.all()) {
-    //   await repairButtonInArray.click();
-    // }
-    await clickIsVisible(activeRepairButton.first());
-    // await page.pause();
+    // await clickIsVisible(activeRepairButton.first());
+    await warehouse.click();
+    await page.waitForTimeout(10 * 1000);
+    console.log(i++);
   }
 });

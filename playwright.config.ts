@@ -1,7 +1,7 @@
 import { PlaywrightTestConfig, devices } from '@playwright/test';
 
 const config: PlaywrightTestConfig = {
-  timeout: 999999999,
+  timeout: 1000 * 60 * 10,
   testDir: 'src',
   outputDir: 'test-results/',
   retries: 999999 * 99999,
