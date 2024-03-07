@@ -1,5 +1,5 @@
 import { refuelAllCars } from '../utils/method';
-import { clickIsVisible } from './../utils/utils';
+import { clickIsVisible, getRandomInt } from './../utils/utils';
 import { Locator, Page, test } from '@playwright/test';
 require('dotenv').config();
 
@@ -16,6 +16,9 @@ let rowAvaliable: Locator;
 let orderNumber: Locator;
 let actionTitle: Locator;
 let actionButton: Locator;
+let workersBlock: Locator;
+let truckBlock: Locator;
+let trailerBlock: Locator;
 let selectRandomWorkers: Locator;
 let selectRandomTruck: Locator;
 let selectRandonTrailer: Locator;
@@ -37,27 +40,25 @@ test.beforeAll(async ({ browser }) => {
   tableAvaliable = page.locator('[id="tbody-available"]');
   rowAvaliable = tableAvaliable.locator('tr');
   orderNumber = rowAvaliable.locator('td').nth(4);
-  actionTitle = page.locator('[class="portlet-wtitle"]').first();
 
-  selectRandomWorkers = page
-    .locator('[class="portlet blue-hoki box"]', { hasText: /Доступно/ })
-    .getByText('Случайный');
+  workersBlock = page.locator('[class="portlet blue-hoki box"]');
+  selectRandomWorkers = workersBlock.filter({ hasText: /Доступно/ }).getByText('Случайный');
 
-  selectRandomTruck = page
-    .locator('[class="portlet purple-plum box"]', { hasText: /Доступно/ })
-    .getByText('Случайный');
+  truckBlock = page.locator('[class="portlet purple-plum box"]');
+  selectRandomTruck = truckBlock.filter({ hasText: /Доступно/ }).getByText('Случайный');
 
-  selectRandonTrailer = page
-    .locator('[class="portlet red-sunglo box"]', { hasText: /Доступно/ })
-    .getByText('Случайный');
+  trailerBlock = page.locator('[class="portlet red-sunglo box"]');
+  selectRandonTrailer = trailerBlock.filter({ hasText: /Доступно/ }).getByText('Случайный');
 
+  actionTitle = page.locator('[class="portlet-title"]').first();
   actionButton = actionTitle.locator('button').first();
+
   workerToSleep = page
     .locator('tr', { hasText: 'Ничего' })
     .and(page.locator('tr', { hasNotText: '100%' }))
     .first();
   activeRepairButton = page
-    .locator('[class="mt-action-row"]', { hasText: /Ничего/ })
+    .locator('[class="mt-action-row"]', { hasText: /Действие: Ничего/ })
     .locator('[class="btn btn-outline blue btn-sm"]', {
       hasText: 'Ремонт',
     });
@@ -70,6 +71,10 @@ test('main script', async () => {
   await page.keyboard.press('Enter');
 
   while (true) {
+    let SRWORKER = 0;
+    let SRTRACK = 0;
+    let SRTRAILER = 0;
+    let actionButtonClickCount = 0;
     // Заправка
     await refuelAllCars(page);
     await page.waitForTimeout(1000);
@@ -92,17 +97,40 @@ test('main script', async () => {
     }
 
     for (const orderNumber of orderNumberArray) {
-      await page.locator('td', { hasText: orderNumber }).nth(1).click();
-      // await page.waitForLoadState('domcontentloaded');
-      await clickIsVisible(selectRandomWorkers);
-      await selectRandomWorkers.waitFor({ state: 'hidden' });
-      await clickIsVisible(selectRandomTruck);
-      await selectRandomTruck.waitFor({ state: 'hidden' });
-      await clickIsVisible(selectRandonTrailer);
-      await selectRandonTrailer.waitFor({ state: 'hidden' });
-      await page.waitForLoadState('domcontentloaded');
+      await page.locator('tr').locator('[class="hidden-xs"]', { hasText: orderNumber }).click();
+      await page.waitForTimeout(2000);
+
+      while ((await selectRandomWorkers.isVisible()) && SRWORKER < 3) {
+        await selectRandomWorkers.click();
+        await page.waitForTimeout(5000);
+        SRWORKER++;
+      }
+      while ((await selectRandomTruck.isVisible()) && SRTRACK < 3) {
+        await selectRandomTruck.click();
+        await page.waitForTimeout(5000);
+        SRTRACK++;
+      }
+      while ((await selectRandonTrailer.isVisible()) && SRTRAILER < 3) {
+        await selectRandonTrailer.click();
+        await page.waitForTimeout(5000);
+        SRTRAILER++;
+      }
+
+      console.log((await actionButton.textContent())?.replace(/\s+/g, ''));
+
       await clickIsVisible(actionButton);
-      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(1000);
+      while (
+        (await page.getByText('Готов к следующему действию: Сейчас!').isVisible()) &&
+        actionButtonClickCount < 3
+      ) {
+        await clickIsVisible(actionButton);
+        await page.waitForTimeout(5000);
+        actionButtonClickCount++;
+      }
+
+      await warehouse.click();
+      await avaliableCountLocator.waitFor();
     }
 
     await warehouse.click();
@@ -110,13 +138,23 @@ test('main script', async () => {
 
     let availableCount = Number(await avaliableCountLocator.textContent());
 
-    // TODO goToTrips
-    await trips.click();
-    if (availableCount == 0 && (await avaliableTrip.first().isVisible())) {
-      await page.waitForLoadState('domcontentloaded');
-      await avaliableTrip.first().click();
-      await page.locator('[id="submit-trips"]').click();
-      await page.waitForLoadState('domcontentloaded');
+    if (availableCount == 0) {
+      // TODO goToTrips
+      await trips.click();
+      if (await avaliableTrip.first().isVisible()) {
+        await page.waitForTimeout(3000);
+
+        let tripCount = (await avaliableTrip.count()) - 1;
+
+        await avaliableTrip.nth(getRandomInt(tripCount)).click();
+
+        await page.waitForTimeout(2000);
+        await page.locator('[id="submit-trips"]').scrollIntoViewIfNeeded();
+        await page.locator('[id="submit-trips"]').click();
+        await page.pause();
+        await page.waitForTimeout(2000);
+        // await page.waitForLoadState('domcontentloaded');
+      }
     }
 
     // TODO  gotoWorkers
@@ -130,7 +168,7 @@ test('main script', async () => {
 
     // await clickIsVisible(activeRepairButton.first());
     await warehouse.click();
-    await page.waitForTimeout(10 * 1000);
+    // await page.waitForTimeout(10 * 1000);
     console.log(i++);
   }
 });

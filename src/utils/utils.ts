@@ -5,3 +5,7 @@ export const clickIsVisible = async (locator: Locator) => {
     await locator.click();
   }
 };
+
+export function getRandomInt(max: number) {
+  return Math.floor(Math.random() * max);
+}
