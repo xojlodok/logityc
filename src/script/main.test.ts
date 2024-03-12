@@ -1,5 +1,5 @@
 import { goToWarehouse, refuelAllCars, repairAllCars } from '../utils/method';
-import { clickIsVisible } from './../utils/utils';
+import { clickIsVisible, getRandomInt } from './../utils/utils';
 import { Locator, Page, test } from '@playwright/test';
 require('dotenv').config();
 
@@ -22,6 +22,9 @@ let trailerBlock: Locator;
 let selectRandomWorkers: Locator;
 let selectRandomTruck: Locator;
 let selectRandomTrailer: Locator;
+let seasonIcon: Locator;
+let season: string;
+let tireChanged: number;
 
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage();
@@ -62,6 +65,8 @@ test.beforeAll(async ({ browser }) => {
 
   actionTitle = page.locator('[class="portlet-title"]').first();
   actionButton = actionTitle.locator('button').first();
+  seasonIcon = page.locator('[class="page-bar"]').locator('[class="fa fa-sun font-red-sunglo"]');
+  tireChanged = 0;
 });
 
 test('main script', async () => {
@@ -69,11 +74,28 @@ test('main script', async () => {
   await page.getByPlaceholder('E-mail').fill(process.env.LOGIN as string);
   await page.getByPlaceholder('Пароль').fill(process.env.PASS as string);
   await page.keyboard.press('Enter');
+  await page.locator('h1', { hasText: 'Главная' }).waitFor();
 
   while (true) {
+    (await seasonIcon.isVisible()) ? (season = 'Лето') : (season = 'Зима');
+
+    // if (1 == 1) {
+    //   await page.goto('https://www.logitycoon.com/eu1/index.php?a=company_tires', {
+    //     waitUntil: 'commit',
+    //   });
+    //   await page.locator('h1', { hasText: 'Гараж' }).waitFor();
+
+    //   let percentsArray: string[] = [];
+    //   let tireRow: Locator = page.locator('tbody').locator('tr');
+    //   for (const tireItem of await tireRow.all()) {
+    //     percentsArray.push(await tireItem.locator('td').nth(2).innerText());
+    //   }
+
+    //   console.log(percentsArray);
+    // }
+
     // Заправка
     await refuelAllCars(page);
-    await page.waitForTimeout(1000);
 
     // Ремонт
     await repairAllCars(page);
@@ -111,7 +133,7 @@ test('main script', async () => {
             await selectRandomTrailer.waitFor({ state: 'hidden' });
           }
           await clickIsVisible(actionButton);
-          await page.getByText('Погрузка...').waitFor({ state: 'hidden' });
+          await page.getByText(' Погрузка... ').first().waitFor();
           break;
         case 'Впуть':
           if (
@@ -126,19 +148,57 @@ test('main script', async () => {
             await selectRandomTruck.waitFor({ state: 'hidden' });
             await selectRandomTrailer.waitFor({ state: 'hidden' });
           }
+          let tirePercent = (
+            await truckBlock
+              .locator('div', { has: page.locator('[data-tooltip="Летние шины"]') })
+              .or(truckBlock.locator('div', { has: page.locator('[data-tooltip="Зимние шины"]') }))
+              .last()
+              .innerText()
+          ).replace(/[^0-9]/g, '');
+
+          if (Number(tirePercent) < 15) {
+            let url = page.url();
+            await truckBlock.getByText('Информация').click();
+            await page.locator('h1', { hasText: 'Грузовик - Информация' }).waitFor();
+            await page
+              .locator('[class="portlet light bordered"]', { hasText: 'Шины' })
+              .getByText('Изменить')
+              .click();
+            await page.locator('tr', { hasText: season }).last().getByText('Выбрать').click();
+            await page.locator('h1', { hasText: 'Грузовик - Информация' }).waitFor();
+            tireChanged++;
+            await page.goto(url, { waitUntil: 'commit' });
+            await actionButton.waitFor();
+          }
+
           await clickIsVisible(actionButton);
-          await page.getByText('В пути...').waitFor({ state: 'hidden' });
+          await page.getByText(' В пути... ').first().waitFor();
           break;
         case 'Разгрузить':
-          await clickIsVisible(actionButton);
-          await page.getByText('Разгрузка...').waitFor({ state: 'hidden' });
+          if (
+            (await trailerBlock.getByText('Обслуживается').isHidden()) &&
+            (await workersBlock.getByText('Болен').isHidden()) &&
+            (await workersBlock.getByText('0 Доступно').isHidden())
+          ) {
+            await clickIsVisible(actionButton);
+            await page.getByText(' Разгрузка... ').first().waitFor();
+          }
           break;
         case 'Завершить':
-          await actionButton.click();
-          await page.getByText(' Завершение... ').waitFor({ state: 'hidden' });
+          if (await workersBlock.getByText('0 Доступно').isHidden()) {
+            await actionButton.click();
+            await page.getByText(' Завершение... ').first().waitFor();
+          }
+          break;
+        case 'Продолжитьдоставку':
+          if (await truckBlock.getByText('Заправка').isHidden()) {
+            await clickIsVisible(actionButton);
+            await page.getByText(' В пути... ').first().waitFor();
+          }
           break;
       }
 
+      await page.waitForTimeout(2000);
       await warehouse.click();
       await avaliableCountLocator.waitFor();
     }
@@ -148,26 +208,27 @@ test('main script', async () => {
 
     let getNewTrip = await rowAvaliable.filter({ hasText: 'Принят' }).first().isHidden();
 
-    if (getNewTrip) {
+    // TODO goToTrips
+    await trips.click();
+    await page.locator('h1', { hasText: 'Путешествия - Доступно' }).waitFor();
+    if (getNewTrip && (await avaliableTrip.first().isVisible())) {
       let countryNameArray = [];
-      // TODO goToTrips
-      await trips.click();
-      await page.locator('h1', { hasText: 'Путешествия - Доступно' }).waitFor();
       for (const trip of await avaliableTrip.all()) {
         countryNameArray.push(await trip.locator('td').nth(2).innerText());
       }
       let uniqueTripName = [...new Set(countryNameArray)];
 
       await page.waitForLoadState('networkidle');
-
       for (const uniqueName of uniqueTripName) {
-        await avaliableTrip.filter({ hasText: uniqueName }).first().click();
+        let trip = avaliableTrip.filter({ hasText: uniqueName });
+
+        await trip.nth(getRandomInt((await trip.count()) - 1)).click();
         await page.locator('[id="submit-trips"]').click();
         await page.waitForTimeout(1000);
       }
     }
 
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(10 * 1000);
     console.log(i++);
   }
 });
