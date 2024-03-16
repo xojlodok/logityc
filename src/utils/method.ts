@@ -1,5 +1,4 @@
 import { Page } from '@playwright/test';
-import { clickIsVisible } from './utils';
 
 export const refuelAllCars = async (page: Page) => {
   let fuelStation = page.locator('[id="menuitem-fuelstation"]');
@@ -11,12 +10,14 @@ export const refuelAllCars = async (page: Page) => {
 
   let tabLocator = page.locator('[class="nav nav-tabs nav-tabs-lg"]').locator('li');
 
-  for (const tab of await tabLocator.all()) {
-    await clickIsVisible(tab);
-    await page.waitForTimeout(3000);
-
-    await clickIsVisible(refuelButton.first());
-    await refuelButton.first().waitFor({ state: 'hidden' });
+  for (const tab of (await tabLocator.all()).reverse()) {
+    await tab.click();
+    await page.waitForTimeout(1000);
+    for (const button of (await refuelButton.all()).reverse()) {
+      await button.waitFor();
+      await button.click();
+      await page.waitForTimeout(2000);
+    }
   }
 };
 
@@ -42,4 +43,13 @@ export const goToWarehouse = async (page: Page) => {
 
   await warehouse.click();
   await page.locator('h1', { hasText: 'Склад' }).waitFor();
+};
+
+export const donateToSavingAccount = async (page: Page, count: number) => {
+  let donateButton = page.locator('[type="submit"]', { hasText: 'Сберегательный счет' });
+
+  await page.goto('/eu1/index.php?a=companybank', { waitUntil: 'commit' });
+  await donateButton.waitFor();
+  await page.locator('[id="money"]').fill(String(count));
+  await donateButton.click();
 };

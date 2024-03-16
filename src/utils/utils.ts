@@ -1,4 +1,4 @@
-import { Locator } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
 
 export const clickIsVisible = async (locator: Locator) => {
   if (await locator.isVisible()) {
@@ -8,4 +8,8 @@ export const clickIsVisible = async (locator: Locator) => {
 
 export function getRandomInt(max: number) {
   return Math.floor(Math.random() * max);
+}
+
+export async function getMyMoney(page: Page): Promise<number> {
+  return Number((await page.locator('[class="balance"]').innerText()).replace(/[^0-9]/g, ''));
 }

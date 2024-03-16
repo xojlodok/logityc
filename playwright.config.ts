@@ -7,8 +7,8 @@ const config: PlaywrightTestConfig = {
   workers: 2,
   use: {
     baseURL: 'https://www.logitycoon.com/',
-    actionTimeout: 20000,
-    navigationTimeout: 20000,
+    actionTimeout: 30000,
+    navigationTimeout: 30000,
   },
   projects: [
     {
