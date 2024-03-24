@@ -290,7 +290,7 @@ test('main script', async ({ viewport }, testInfo) => {
       }
     }
 
-    await page.waitForTimeout(60 * 1000);
+    await page.waitForTimeout(120 * 1000);
     console.log(i++);
   }
 });
