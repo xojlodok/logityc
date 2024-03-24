@@ -35,8 +35,6 @@ let tireChanged: number;
 let botapi;
 
 test.beforeAll(async ({ browser }, testInfo) => {
-  console.log(process.env);
-
   page = await browser.newPage();
   botapi = new Api(process.env.BOT_TOKEN as string);
 
