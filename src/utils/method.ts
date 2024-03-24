@@ -45,11 +45,18 @@ export const goToWarehouse = async (page: Page) => {
   await page.locator('h1', { hasText: 'Склад' }).waitFor();
 };
 
-export const donateToSavingAccount = async (page: Page, count: number) => {
+export const donateToSavingAccount = async (page: Page) => {
   let donateButton = page.locator('[type="submit"]', { hasText: 'Сберегательный счет' });
+  let noteWarning = page.locator('[class="note note-warning"]');
 
   await page.goto('/eu1/index.php?a=companybank', { waitUntil: 'commit' });
-  await donateButton.waitFor();
-  await page.locator('[id="money"]').fill(String(count));
-  await donateButton.click();
+  await page.locator('h1', { hasText: 'Банковский счёт' }).waitFor();
+
+  if (await noteWarning.isHidden()) {
+    await page.waitForLoadState('networkidle');
+
+    await donateButton.waitFor();
+    await page.locator('[id="money"]').fill('1000000');
+    await donateButton.click();
+  }
 };
