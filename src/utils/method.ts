@@ -1,8 +1,11 @@
-import { Page } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 export const refuelAllCars = async (page: Page) => {
   let fuelStation = page.locator('[id="menuitem-fuelstation"]');
-  let refuelButton = page.getByText('Обычная заправка');
+  let refuelButton = page
+    .locator('button', { hasText: 'Корпорация' })
+    .or(page.locator('button', { hasText: 'Обычная заправка' }))
+    .last();
 
   await fuelStation.click();
   await page.locator('h1', { hasText: 'Заправка' }).waitFor();
