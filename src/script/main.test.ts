@@ -277,6 +277,12 @@ test('main script', async ({ viewport }, testInfo) => {
       await avaliableCountLocator.waitFor();
     }
 
+    if (await redAvaliable.isVisible()) {
+      await redAvaliable.click();
+      await page.getByText('Отменить').click();
+      await page.getByText('Да, я хочу отменить эту доставку.').click();
+    }
+
     await warehouse.click();
     await avaliableCountLocator.waitFor();
 
