@@ -303,13 +303,13 @@ test('main script', async ({ viewport }, testInfo) => {
         let trip = avaliableTrip.filter({ hasText: uniqueName });
 
         // Выбор заказа
-        await trip.nth(getRandomInt(4)).click();
+        await trip.nth(getRandomInt(3)).click();
         await page.locator('[id="submit-trips"]').click();
         await page.waitForTimeout(1000);
       }
     }
 
-    await page.waitForTimeout(30 * 1000);
+    await page.waitForTimeout(120 * 1000);
     console.log(i++);
   }
 });
