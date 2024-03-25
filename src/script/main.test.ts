@@ -20,6 +20,7 @@ let garage: Locator;
 let contracts: Locator;
 let tableAvaliable: Locator;
 let rowAvaliable: Locator;
+let redAvaliable: Locator;
 let orderNumber: Locator;
 let actionTitle: Locator;
 let actionButton: Locator;
@@ -73,6 +74,12 @@ test.beforeEach(async () => {
     .filter({ has: page.locator('[title="Грузовики - Доступно"]') })
     .filter({ has: page.locator('[title="Прицепы - Доступно"]') })
     .filter({ has: page.locator('[title="Сотрудники - Доступно"]') });
+  redAvaliable = page
+    .locator('tr')
+    .filter({ has: page.locator('[title="Грузовики - Не доступно"]') })
+    .filter({ has: page.locator('[title="Прицепы - Не доступно"]') })
+    .filter({ has: page.locator('[title="Сотрудники - Не доступно"]') })
+    .first();
   workers = page.locator('[id="menuitem-employees"]');
   garage = page.locator('[id="menuitem-garage"]');
   contracts = page.locator('[id="menuitem-contracts"]');
@@ -144,6 +151,12 @@ test('main script', async ({ viewport }, testInfo) => {
     await page.waitForTimeout(1000);
 
     await goToWarehouse(page);
+
+    if (await redAvaliable.isVisible()) {
+      await redAvaliable.click();
+      await page.getByText('Отменить').click();
+      await page.getByText('Да, я хочу отменить эту доставку.').click();
+    }
 
     let orderNumberArray = [];
     for (const row of await rowAvaliable.all()) {
