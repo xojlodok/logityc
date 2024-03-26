@@ -70,7 +70,7 @@ test.beforeEach(async () => {
     .or(page.locator('[class="type6"]'))
     .or(page.locator('[class="type7"]'))
     .or(page.locator('[class="type8"]'))
-    .or(page.locator('[class="type9"]'))
+    // .or(page.locator('[class="type9"]'))
     .filter({ has: page.locator('[title="Грузовики - Доступно"]') })
     .filter({ has: page.locator('[title="Прицепы - Доступно"]') })
     .filter({ has: page.locator('[title="Сотрудники - Доступно"]') });
@@ -309,7 +309,7 @@ test('main script', async ({ viewport }, testInfo) => {
       }
     }
 
-    await page.waitForTimeout(120 * 1000);
+    await page.waitForTimeout(10 * 1000);
     console.log(i++);
   }
 });
