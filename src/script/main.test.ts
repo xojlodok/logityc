@@ -35,6 +35,7 @@ let season: string;
 let tireChanged: number;
 let botapi;
 let timeout: number = process.env.TIMEOUT || 30;
+console.log(timeout);
 
 test.beforeAll(async ({ browser }, testInfo) => {
   page = await browser.newPage();
