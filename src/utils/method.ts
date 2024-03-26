@@ -32,13 +32,28 @@ export const repairAllCars = async (page: Page) => {
     .locator('[class="btn btn-outline blue btn-sm"]', {
       hasText: 'Ремонт',
     });
+  let readyBlock = page.locator('[class="mt-action"]', { has: activeRepairButton });
 
   await garage.click();
   await page.locator('h1', { hasText: 'Гараж' }).waitFor();
-  while (await activeRepairButton.first().isVisible()) {
-    await activeRepairButton.first().click();
-    await page.waitForTimeout(300);
+  for (const iterator of (await readyBlock.all()).reverse()) {
+    let persent = Number(
+      (await iterator.locator('b', { hasText: '%' }).innerText()).replace(/[^0-9]/g, ''),
+    );
+
+    if (persent < 80) {
+      iterator
+        .locator('[class="btn btn-outline blue btn-sm"]', {
+          hasText: 'Ремонт',
+        })
+        .first()
+        .click();
+    }
   }
+  // while (await activeRepairButton.first().isVisible()) {
+  // await activeRepairButton.first().click();
+  // await page.waitForTimeout(300);
+  // }
 };
 
 export const goToWarehouse = async (page: Page) => {
