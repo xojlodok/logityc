@@ -34,6 +34,7 @@ let seasonBlockOnMain: Locator;
 let season: string;
 let tireChanged: number;
 let botapi;
+let timeout: number = process.env.TIMEOUT || 30;
 
 test.beforeAll(async ({ browser }, testInfo) => {
   page = await browser.newPage();
@@ -309,7 +310,7 @@ test('main script', async ({ viewport }, testInfo) => {
       }
     }
 
-    await page.waitForTimeout(10 * 1000);
+    await page.waitForTimeout(timeout * 1000);
     console.log(i++);
   }
 });
