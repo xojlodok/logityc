@@ -35,7 +35,6 @@ let season: string;
 let tireChanged: number;
 let botapi;
 let timeout: number = process.env.TIMEOUT || 30;
-console.log(timeout);
 
 test.beforeAll(async ({ browser }, testInfo) => {
   page = await browser.newPage();
@@ -202,7 +201,8 @@ test('main script', async ({ viewport }, testInfo) => {
             (await selectRandomTruck.isVisible()) ||
             (await selectRandomTrailer.isVisible()) ||
             ((await truckBlock.filter({ hasText: ' Заправка ' }).isHidden()) &&
-              (await truckBlock.filter({ hasText: ' Обслуживается ' }).isHidden()))
+              (await truckBlock.filter({ hasText: ' Обслуживается ' }).isHidden()) &&
+              (await workersBlock.filter({ hasText: 'Заболел' }).isHidden()))
           ) {
             await clickIsVisible(selectRandomWorkers);
             await clickIsVisible(selectRandomTruck);
@@ -311,7 +311,7 @@ test('main script', async ({ viewport }, testInfo) => {
       }
     }
 
-    await page.waitForTimeout(10 * 1000);
+    await page.waitForTimeout(timeout * 1000);
     console.log(i++);
   }
 });
