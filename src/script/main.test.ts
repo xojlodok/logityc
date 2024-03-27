@@ -253,7 +253,8 @@ test('main script', async ({ viewport }, testInfo) => {
           if (
             (await workersBlock.filter({ hasText: /Болен/ }).isHidden()) &&
             (await workersBlock.filter({ hasText: /0 Доступно/ }).isHidden()) &&
-            (await trailerBlock.filter({ hasText: /Обслуживается/ }).isHidden())
+            (await trailerBlock.filter({ hasText: /Обслуживается/ }).isHidden()) &&
+            (await workersBlock.filter({ hasText: 'Заболел' }).isHidden())
           ) {
             await clickIsVisible(actionButton);
             await page.getByText(' Разгрузка... ').first().waitFor();
