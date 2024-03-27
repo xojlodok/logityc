@@ -311,7 +311,7 @@ test('main script', async ({ viewport }, testInfo) => {
       }
     }
 
-    await page.waitForTimeout(140 * 1000);
+    await page.waitForTimeout(10 * 1000);
     console.log(i++);
   }
 });
