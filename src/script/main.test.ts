@@ -39,6 +39,7 @@ let timeout: number = process.env.TIMEOUT || 30;
 test.beforeAll(async ({ browser }, testInfo) => {
   page = await browser.newPage();
   botapi = new Api(process.env.BOT_TOKEN as string);
+  await page.route(/googlesyndication/, route => route.abort());
 
   await page.goto('?lang=ru-RU');
   await page.getByPlaceholder('E-mail').fill(process.env.LOGIN as string);
@@ -187,7 +188,8 @@ test('main script', async ({ viewport }, testInfo) => {
             await selectRandomWorkers.waitFor({ state: 'hidden' });
             await selectRandomTruck.waitFor({ state: 'hidden' });
             await selectRandomTrailer.waitFor({ state: 'hidden' });
-            await clickIsVisible(actionButton);
+            await actionButton.click();
+            // await clickIsVisible(actionButton);
             await page.getByText(' Погрузка... ').first().waitFor();
           }
           if (await actionButton.filter({ hasText: 'Погрузить' }).isVisible()) {
