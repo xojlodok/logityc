@@ -41,9 +41,9 @@ test.beforeAll(async ({ browser }, testInfo) => {
   page = await browser.newPage();
   await page.goto('?lang=ru-RU');
   context = page.context();
-  await context.addCookies([
-    { name: 'eu1_extracheck', value: '0', domain: 'www.logitycoon.com', path: '/' },
-  ]);
+  // await context.addCookies([
+  //   { name: 'eu1_extracheck', value: '0', domain: 'www.logitycoon.com', path: '/' },
+  // ]);
 
   botapi = new Api(process.env.BOT_TOKEN as string);
   await page.route(/googlesyndication/, route => route.abort());
