@@ -160,6 +160,7 @@ test('main script', async ({ viewport }, testInfo) => {
       await page.getByText('Да, я хочу отменить эту доставку.').click();
     }
 
+    await page.waitForLoadState('networkidle');
     let orderNumberArray = [];
     for (const row of await rowAvaliable.all()) {
       orderNumberArray.push(await row.locator('td').nth(4).textContent());
@@ -284,6 +285,7 @@ test('main script', async ({ viewport }, testInfo) => {
       await avaliableCountLocator.waitFor();
     }
 
+    await page.waitForLoadState('networkidle');
     if (await redAvaliable.isVisible()) {
       await redAvaliable.click();
       await page.getByText('Отменить').click();
