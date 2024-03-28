@@ -9,6 +9,9 @@ const config: PlaywrightTestConfig = {
     baseURL: 'https://www.logitycoon.com/',
     actionTimeout: 30000,
     navigationTimeout: 40000,
+    extraHTTPHeaders: {
+      eu1_extracheck: '0',
+    },
   },
   projects: [
     {

@@ -11,6 +11,7 @@ import { Api } from 'grammy';
 
 let i: number = 0;
 let page: Page;
+let context;
 let warehouse: Locator;
 let avaliableCountLocator: Locator;
 let trips: Locator;
@@ -38,13 +39,22 @@ let timeout: number = process.env.TIMEOUT || 30;
 
 test.beforeAll(async ({ browser }, testInfo) => {
   page = await browser.newPage();
+  await page.goto('?lang=ru-RU');
+  context = page.context();
+  await context.addCookies([
+    { name: 'eu1_extracheck', value: '0', domain: 'www.logitycoon.com', path: '/' },
+  ]);
+
   botapi = new Api(process.env.BOT_TOKEN as string);
   await page.route(/googlesyndication/, route => route.abort());
 
-  await page.goto('?lang=ru-RU');
   await page.getByPlaceholder('E-mail').fill(process.env.LOGIN as string);
   await page.getByPlaceholder('Пароль').fill(process.env.PASS as string);
   await page.keyboard.press('Enter');
+
+  // console.log(await (await page.waitForRequest(/index.php/)).allHeaders());
+  // console.log(await (await page.waitForResponse(/index.php/)).allHeaders());
+
   await page.locator('h1', { hasText: 'Главная' }).waitFor();
 
   seasonBlockOnMain = page
@@ -191,6 +201,7 @@ test('main script', async ({ viewport }, testInfo) => {
             await selectRandomWorkers.waitFor({ state: 'hidden' });
             await selectRandomTruck.waitFor({ state: 'hidden' });
             await selectRandomTrailer.waitFor({ state: 'hidden' });
+            await page.waitForLoadState('networkidle');
             await actionButton.click();
             // await clickIsVisible(actionButton);
             await page.getByText(' Погрузка... ').first().waitFor();
@@ -242,7 +253,7 @@ test('main script', async ({ viewport }, testInfo) => {
               await page.locator('tr', { hasText: season }).last().getByText('Выбрать').click();
               await page.locator('h1', { hasText: 'Грузовик - Информация' }).waitFor();
               tireChanged++;
-              await page.goto(url, { waitUntil: 'commit' });
+              await page.goto(url, { waitUntil: 'networkidle' });
               await actionButton.waitFor();
               await page.waitForTimeout(2000);
             }
@@ -259,7 +270,9 @@ test('main script', async ({ viewport }, testInfo) => {
             (await trailerBlock.filter({ hasText: /Обслуживается/ }).isHidden()) &&
             (await workersBlock.filter({ hasText: 'Заболел' }).isHidden())
           ) {
-            await clickIsVisible(actionButton);
+            await page.waitForLoadState('networkidle');
+            await actionButton.click();
+            // await clickIsVisible(actionButton);
             await page.getByText(' Разгрузка... ').first().waitFor();
           }
           break;
@@ -268,13 +281,15 @@ test('main script', async ({ viewport }, testInfo) => {
             (await workersBlock.getByText('0 Доступно').isHidden()) ||
             (await workersBlock.getByText('10 Доступно').isVisible())
           ) {
+            await page.waitForLoadState('networkidle');
             await actionButton.click();
             await page.getByText(' Завершение... ').first().waitFor();
           }
           break;
         case 'Продолжитьдоставку':
           if (await truckBlock.getByText('Заправка').isHidden()) {
-            await clickIsVisible(actionButton);
+            await page.waitForLoadState('networkidle');
+            await actionButton.click();
             await page.getByText(' В пути... ').first().waitFor();
           }
           break;
