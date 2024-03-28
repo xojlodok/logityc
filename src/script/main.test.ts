@@ -293,13 +293,7 @@ test('main script', async ({ viewport }, testInfo) => {
     await warehouse.click();
     await avaliableCountLocator.waitFor();
 
-    let getNewTrip =
-      (await rowAvaliable.filter({ hasText: 'Принят' }).first().isHidden()) ||
-      (await rowAvaliable
-        .filter({ hasText: 'Принят' })
-        .filter({ has: page.locator('[title="Сотрудники - Не доступно"]') })
-        .first()
-        .isVisible());
+    let getNewTrip = await rowAvaliable.filter({ hasText: 'Принят' }).first().isHidden();
 
     // TODO goToTrips
     await trips.click();
