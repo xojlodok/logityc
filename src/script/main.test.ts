@@ -92,7 +92,7 @@ test.beforeEach(async () => {
   workersBlock = page.locator('[class="portlet blue-hoki box"]');
   selectRandomWorkers = workersBlock
     .filter({ hasText: /Доступно/ })
-    .filter({ hasNotText: '0 Доступно' })
+    .filter({ hasNotText: /0 Доступно/ })
     .getByText('Случайный');
 
   truckBlock = page.locator('[class="portlet purple-plum box"]');
@@ -180,7 +180,9 @@ test('main script', async ({ viewport }, testInfo) => {
           if (
             (await selectRandomWorkers.isVisible()) ||
             (await selectRandomTruck.isVisible()) ||
-            (await selectRandomTrailer.isVisible())
+            (await selectRandomTrailer.isVisible()) ||
+            ((await workersBlock.filter({ hasText: 'Заболел' }).isHidden()) &&
+              (await workersBlock.filter({ hasText: ' 0 доступно' }).isHidden()))
           ) {
             await clickIsVisible(selectRandomWorkers);
             await clickIsVisible(selectRandomTruck);
@@ -192,10 +194,10 @@ test('main script', async ({ viewport }, testInfo) => {
             // await clickIsVisible(actionButton);
             await page.getByText(' Погрузка... ').first().waitFor();
           }
-          if (await actionButton.filter({ hasText: 'Погрузить' }).isVisible()) {
-            await actionButton.filter({ hasText: 'Погрузить' }).click();
-            await page.getByText(' Погрузка... ').first().waitFor();
-          }
+          // if (await actionButton.filter({ hasText: 'Погрузить' }).isVisible()) {
+          //   await actionButton.filter({ hasText: 'Погрузить' }).click();
+          //   await page.getByText(' Погрузка... ').first().waitFor();
+          // }
           break;
         case 'Впуть':
           if (
@@ -291,7 +293,13 @@ test('main script', async ({ viewport }, testInfo) => {
     await warehouse.click();
     await avaliableCountLocator.waitFor();
 
-    let getNewTrip = await rowAvaliable.filter({ hasText: 'Принят' }).first().isHidden();
+    let getNewTrip =
+      (await rowAvaliable.filter({ hasText: 'Принят' }).first().isHidden()) ||
+      (await rowAvaliable
+        .filter({ hasText: 'Принят' })
+        .filter({ has: page.locator('[title="Сотрудники - Не доступно"]') })
+        .first()
+        .isVisible());
 
     // TODO goToTrips
     await trips.click();
