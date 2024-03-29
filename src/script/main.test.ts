@@ -336,7 +336,7 @@ test('main script', async ({ viewport }, testInfo) => {
         let trip = avaliableTrip.filter({ hasText: uniqueName });
 
         // Выбор заказа
-        await trip.nth(getRandomInt(3)).click();
+        await trip.nth(getRandomInt(2)).click();
         await page.waitForTimeout(300);
         await page.locator('[id="submit-trips"]').click();
         await page.waitForTimeout(1000);
