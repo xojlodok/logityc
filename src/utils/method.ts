@@ -2,14 +2,11 @@ import { Page, Locator, expect } from '@playwright/test';
 
 export const refuelAllCars = async (page: Page) => {
   let fuelStation = page.locator('[id="menuitem-fuelstation"]');
-  let refuelButton = page
-    .locator('button', { hasText: 'Корпорация' })
-    .or(page.locator('button', { hasText: 'Обычная заправка' }))
-    .last();
+  let refuelButton = page.locator('button', { hasText: 'Корпорация' });
+  // .or(page.locator('button', { hasText: 'Обычная заправка' }));
 
   await fuelStation.click();
   await page.locator('h1', { hasText: 'Заправка' }).waitFor();
-  await page.waitForTimeout(4000);
 
   let tabLocator = page.locator('[class="nav nav-tabs nav-tabs-lg"]').locator('li');
 
@@ -19,7 +16,7 @@ export const refuelAllCars = async (page: Page) => {
     for (const button of (await refuelButton.all()).reverse()) {
       await button.waitFor();
       await button.click();
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState('networkidle');
     }
   }
 };
