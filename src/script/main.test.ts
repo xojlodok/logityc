@@ -185,7 +185,16 @@ test('main script', async ({ viewport }, testInfo) => {
       await page.locator('h1', { hasText: 'Груз' }).waitFor();
 
       let textButton = ((await actionButton.textContent()) as string).replace(/\s+/g, '');
-
+      if (
+        (await workersBlock.filter({ hasText: '0 Доступно' }).isVisible()) &&
+        (await truckBlock.filter({ hasText: '0 Доступно' }).isVisible()) &&
+        (await trailerBlock.filter({ hasText: '0 Доступно' }).isVisible()) &&
+        (await actionButton.filter({ hasText: 'Завершить' }).isHidden())
+      ) {
+        await page.getByText('Отменить').click();
+        await page.getByText('Да, я хочу отменить эту доставку.').click();
+        continue;
+      }
       switch (textButton) {
         case 'Погрузить':
           if (
@@ -328,6 +337,7 @@ test('main script', async ({ viewport }, testInfo) => {
 
         // Выбор заказа
         await trip.nth(getRandomInt(3)).click();
+        await page.waitForTimeout(300);
         await page.locator('[id="submit-trips"]').click();
         await page.waitForTimeout(1000);
       }
