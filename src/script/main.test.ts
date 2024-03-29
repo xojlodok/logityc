@@ -204,9 +204,9 @@ test('main script', async ({ viewport }, testInfo) => {
               (await workersBlock.filter({ hasText: ' 0 Доступно' }).isHidden()) &&
               (await trailerBlock.filter({ hasText: '0 Доступно' }).isHidden()))
           ) {
-            clickIsVisible(selectRandomWorkers);
-            clickIsVisible(selectRandomTruck);
-            clickIsVisible(selectRandomTrailer);
+            await clickIsVisible(selectRandomWorkers);
+            await clickIsVisible(selectRandomTruck);
+            await clickIsVisible(selectRandomTrailer);
             await selectRandomWorkers.waitFor({ state: 'hidden' });
             await selectRandomTruck.waitFor({ state: 'hidden' });
             await selectRandomTrailer.waitFor({ state: 'hidden' });
@@ -224,9 +224,9 @@ test('main script', async ({ viewport }, testInfo) => {
               (await truckBlock.filter({ hasText: 'Обслуживается' }).isHidden()) &&
               (await workersBlock.filter({ hasText: 'Заболел' }).isHidden()))
           ) {
-            clickIsVisible(selectRandomWorkers);
-            clickIsVisible(selectRandomTruck);
-            clickIsVisible(selectRandomTrailer);
+            await clickIsVisible(selectRandomWorkers);
+            await clickIsVisible(selectRandomTruck);
+            await clickIsVisible(selectRandomTrailer);
             await selectRandomWorkers.waitFor({ state: 'hidden' });
             await selectRandomTruck.waitFor({ state: 'hidden' });
             await selectRandomTrailer.waitFor({ state: 'hidden' });
