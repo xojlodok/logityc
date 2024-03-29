@@ -154,12 +154,6 @@ test('main script', async ({ viewport }, testInfo) => {
     // await page.locator('.portlet', { hasText: 'Принятые контракты' }).locator();
     // TODO ТУТ Я ДЕЛАЮ ПРОВЕРКУ НА КОНТРАКТЫ И ПУЛЧЕНИЕ
 
-    // Заправка
-    if (i % 3 == 0) {
-      await refuelAllCars(page);
-      await page.waitForTimeout(1000);
-    }
-
     // Ремонт
     await repairAllCars(page);
     await page.waitForTimeout(1000);
@@ -204,7 +198,8 @@ test('main script', async ({ viewport }, testInfo) => {
             (await selectRandomTruck.isVisible()) ||
             (await selectRandomTrailer.isVisible()) ||
             ((await workersBlock.filter({ hasText: 'Заболел' }).isHidden()) &&
-              (await workersBlock.filter({ hasText: ' 0 доступно' }).isHidden()))
+              (await workersBlock.filter({ hasText: ' 0 Доступно' }).isHidden()) &&
+              (await trailerBlock.filter({ hasText: '0 Доступно' }).isHidden()))
           ) {
             await clickIsVisible(selectRandomWorkers);
             await clickIsVisible(selectRandomTruck);
@@ -316,6 +311,12 @@ test('main script', async ({ viewport }, testInfo) => {
       await redAvaliable.click();
       await page.getByText('Отменить').click();
       await page.getByText('Да, я хочу отменить эту доставку.').click();
+    }
+
+    // Заправка
+    if (i % 3 == 0) {
+      await refuelAllCars(page);
+      await page.waitForTimeout(1000);
     }
 
     await warehouse.click();
