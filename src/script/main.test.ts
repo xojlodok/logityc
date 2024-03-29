@@ -47,6 +47,9 @@ test.beforeAll(async ({ browser }, testInfo) => {
 
   botapi = new Api(process.env.BOT_TOKEN as string);
   await page.route(/googlesyndication/, route => route.abort());
+  await page.route(/responsive.css/, route => route.abort());
+  await page.route(/extra.css/, route => route.abort());
+  await page.route(/simple-line-icons.css/, route => route.abort());
 
   await page.getByPlaceholder('E-mail').fill(process.env.LOGIN as string);
   await page.getByPlaceholder('Пароль').fill(process.env.PASS as string);
@@ -209,21 +212,16 @@ test('main script', async ({ viewport }, testInfo) => {
             await selectRandomTrailer.waitFor({ state: 'hidden' });
             await page.waitForLoadState('networkidle');
             await actionButton.click();
-            // await clickIsVisible(actionButton);
             await page.getByText(' Погрузка... ').first().waitFor();
           }
-          // if (await actionButton.filter({ hasText: 'Погрузить' }).isVisible()) {
-          //   await actionButton.filter({ hasText: 'Погрузить' }).click();
-          //   await page.getByText(' Погрузка... ').first().waitFor();
-          // }
           break;
         case 'Впуть':
           if (
             (await selectRandomWorkers.isVisible()) ||
             (await selectRandomTruck.isVisible()) ||
             (await selectRandomTrailer.isVisible()) ||
-            ((await truckBlock.filter({ hasText: ' Заправка ' }).isHidden()) &&
-              (await truckBlock.filter({ hasText: ' Обслуживается ' }).isHidden()) &&
+            ((await truckBlock.filter({ hasText: 'Заправка' }).isHidden()) &&
+              (await truckBlock.filter({ hasText: 'Обслуживается' }).isHidden()) &&
               (await workersBlock.filter({ hasText: 'Заболел' }).isHidden()))
           ) {
             await clickIsVisible(selectRandomWorkers);
@@ -264,7 +262,8 @@ test('main script', async ({ viewport }, testInfo) => {
               await page.waitForTimeout(2000);
             }
 
-            await clickIsVisible(actionButton);
+            await page.waitForLoadState('networkidle');
+            await actionButton.click();
             await page.getByText(' В пути... ').first().waitFor({ timeout: 20000 });
           }
 
@@ -278,7 +277,6 @@ test('main script', async ({ viewport }, testInfo) => {
           ) {
             await page.waitForLoadState('networkidle');
             await actionButton.click();
-            // await clickIsVisible(actionButton);
             await page.getByText(' Разгрузка... ').first().waitFor();
           }
           break;
@@ -301,7 +299,6 @@ test('main script', async ({ viewport }, testInfo) => {
           break;
       }
 
-      // await page.waitForTimeout(2000);
       await warehouse.click();
       await avaliableCountLocator.waitFor();
     }
