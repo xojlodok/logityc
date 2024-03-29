@@ -155,8 +155,10 @@ test('main script', async ({ viewport }, testInfo) => {
     // TODO ТУТ Я ДЕЛАЮ ПРОВЕРКУ НА КОНТРАКТЫ И ПУЛЧЕНИЕ
 
     // Заправка
-    await refuelAllCars(page);
-    await page.waitForTimeout(1000);
+    if (i % 3 == 0) {
+      await refuelAllCars(page);
+      await page.waitForTimeout(1000);
+    }
 
     // Ремонт
     await repairAllCars(page);
