@@ -189,11 +189,14 @@ test('main script', async ({ viewport }, testInfo) => {
         (await truckBlock.filter({ hasText: '0 Доступно' }).isVisible()) &&
         (await trailerBlock.filter({ hasText: '0 Доступно' }).isVisible()) &&
         (await actionButton.filter({ hasText: 'Завершить' }).isHidden())
+        // ((await workersBlock.filter({ hasText: '0 Доступно' }).isVisible()) &&
+        //   (await workersBlock.filter({ hasText: /[1-9] Доступно/ }).isVisible()))
       ) {
         await page.getByText('Отменить').click();
         await page.getByText('Да, я хочу отменить эту доставку.').click();
-        continue;
+        break;
       }
+
       switch (textButton) {
         case 'Погрузить':
           if (
