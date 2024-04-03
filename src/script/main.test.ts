@@ -196,7 +196,7 @@ test('main script', async ({}, testInfo) => {
       ) {
         await page.getByText('Отменить').click();
         await page.getByText('Да, я хочу отменить эту доставку.').click();
-        break;
+        continue;
       }
 
       switch (textButton) {
