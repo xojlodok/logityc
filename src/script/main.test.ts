@@ -55,7 +55,6 @@ test.beforeAll(async ({ browser }, testInfo) => {
   await page.route(/content_style.css/, route => route.abort());
   await page.route(/content.css/, route => route.abort());
   await page.route(/fonts.googleapis.com/, route => route.abort());
-
   await page.getByPlaceholder('E-mail').fill(process.env.LOGIN as string);
   await page.getByPlaceholder('Пароль').fill(process.env.PASS as string);
   await page.keyboard.press('Enter');
@@ -130,7 +129,7 @@ test.beforeEach(async () => {
   tireChanged = 0;
 });
 
-test('main script', async ({ viewport }, testInfo) => {
+test('main script', async ({}, testInfo) => {
   if (
     (await page.locator('[class="portlet-body captcha_portlet"]').isVisible()) &&
     testInfo.retry % 7 == 0
@@ -202,27 +201,26 @@ test('main script', async ({ viewport }, testInfo) => {
 
       switch (textButton) {
         case 'Погрузить':
-          if (await selectRandomWorkers.isVisible()) {
-            await selectRandomWorkers.click();
-            await selectRandomWorkers.waitFor({ state: 'hidden' });
-            await page.locator('h1', { hasText: 'Груз' }).waitFor();
-          }
-          if (await selectRandomTruck.isVisible()) {
-            await selectRandomTruck.click();
-            await selectRandomTruck.waitFor({ state: 'hidden' });
-            await page.locator('h1', { hasText: 'Груз' }).waitFor();
-          }
-          if (await selectRandomTrailer.isVisible()) {
-            await selectRandomTrailer.click();
-            await selectRandomTrailer.waitFor({ state: 'hidden' });
-            await page.locator('h1', { hasText: 'Груз' }).waitFor();
-          }
           if (
             (await workersBlock.filter({ hasText: 'Заболел' }).isHidden()) &&
             (await workersBlock.filter({ hasText: ' 0 Доступно' }).isHidden()) &&
             (await trailerBlock.filter({ hasText: '0 Доступно' }).isHidden())
           ) {
-            await page.waitForLoadState('networkidle');
+            if (await selectRandomWorkers.isVisible()) {
+              await selectRandomWorkers.click();
+              await selectRandomWorkers.waitFor({ state: 'hidden' });
+              await page.locator('h1', { hasText: 'Груз' }).waitFor();
+            }
+            if (await selectRandomTruck.isVisible()) {
+              await selectRandomTruck.click();
+              await selectRandomTruck.waitFor({ state: 'hidden' });
+              await page.locator('h1', { hasText: 'Груз' }).waitFor();
+            }
+            if (await selectRandomTrailer.isVisible()) {
+              await selectRandomTrailer.click();
+              await selectRandomTrailer.waitFor({ state: 'hidden' });
+              await page.locator('h1', { hasText: 'Груз' }).waitFor();
+            }
             await actionButton.click();
             await page.getByText('Погрузка...').first().waitFor();
           }
