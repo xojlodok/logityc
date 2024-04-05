@@ -109,19 +109,19 @@ test.beforeEach(async () => {
   workersBlock = page.locator('[class="portlet blue-hoki box"]');
   selectRandomWorkers = workersBlock
     .filter({ hasText: /Доступно/ })
-    .filter({ hasNotText: /0 Доступно/ })
+    .filter({ hasNotText: / 0 Доступно / })
     .getByText('Случайный');
 
   truckBlock = page.locator('[class="portlet purple-plum box"]');
   selectRandomTruck = truckBlock
     .filter({ hasText: /Доступно/ })
-    .filter({ hasNotText: '0 Доступно' })
+    .filter({ hasNotText: / 0 Доступно / })
     .getByText('Случайный');
 
   trailerBlock = page.locator('[class="portlet red-sunglo box"]');
   selectRandomTrailer = trailerBlock
     .filter({ hasText: /Доступно/ })
-    .filter({ hasNotText: '0 Доступно' })
+    .filter({ hasNotText: / 0 Доступно / })
     .getByText('Случайный');
 
   actionTitle = page.locator('[class="portlet-title"]').first();
@@ -189,9 +189,9 @@ test('main script', async ({}, testInfo) => {
 
       let textButton = ((await actionButton.textContent()) as string).replace(/\s+/g, '');
       if (
-        (await workersBlock.filter({ hasText: '0 Доступно' }).isVisible()) &&
-        (await truckBlock.filter({ hasText: '0 Доступно' }).isVisible()) &&
-        (await trailerBlock.filter({ hasText: '0 Доступно' }).isVisible()) &&
+        (await workersBlock.filter({ hasText: / 0 Доступно / }).isVisible()) &&
+        (await truckBlock.filter({ hasText: / 0 Доступно / }).isVisible()) &&
+        (await trailerBlock.filter({ hasText: / 0 Доступно / }).isVisible()) &&
         (await actionButton.filter({ hasText: 'Завершить' }).isHidden())
       ) {
         await page.getByText('Отменить').click();
@@ -203,8 +203,8 @@ test('main script', async ({}, testInfo) => {
         case 'Погрузить':
           if (
             (await workersBlock.filter({ hasText: 'Заболел' }).isHidden()) &&
-            (await workersBlock.filter({ hasText: ' 0 Доступно' }).isHidden()) &&
-            (await trailerBlock.filter({ hasText: '0 Доступно' }).isHidden())
+            (await workersBlock.filter({ hasText: / 0 Доступно / }).isHidden()) &&
+            (await trailerBlock.filter({ hasText: / 0 Доступно / }).isHidden())
           ) {
             if (await selectRandomWorkers.isVisible()) {
               await selectRandomWorkers.click();
@@ -281,7 +281,7 @@ test('main script', async ({}, testInfo) => {
         case 'Разгрузить':
           if (
             (await workersBlock.filter({ hasText: /Болен/ }).isHidden()) &&
-            (await workersBlock.filter({ hasText: /0 Доступно/ }).isHidden()) &&
+            (await workersBlock.filter({ hasText: / 0 Доступно / }).isHidden()) &&
             (await trailerBlock.filter({ hasText: /Обслуживается/ }).isHidden()) &&
             (await workersBlock.filter({ hasText: 'Заболел' }).isHidden())
           ) {
@@ -291,10 +291,7 @@ test('main script', async ({}, testInfo) => {
           }
           break;
         case 'Завершить':
-          if (
-            (await workersBlock.getByText('0 Доступно').isHidden()) ||
-            (await workersBlock.getByText('10 Доступно').isVisible())
-          ) {
+          if (await workersBlock.getByText(/ 0 Доступно /).isHidden()) {
             await page.waitForLoadState('networkidle');
             await actionButton.click();
             await page.getByText(' Завершение... ').first().waitFor();
@@ -343,7 +340,7 @@ test('main script', async ({}, testInfo) => {
 
       await page.waitForLoadState('networkidle');
       for (const uniqueName of uniqueTripName) {
-        let trip = avaliableTrip.filter({ hasText: uniqueName });
+        let trip = avaliableTrip.locator('td', { hasText: uniqueName });
 
         // Выбор заказа
         await trip.nth(getRandomInt(2)).click();
