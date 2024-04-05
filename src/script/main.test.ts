@@ -189,9 +189,9 @@ test('main script', async ({}, testInfo) => {
 
       let textButton = ((await actionButton.textContent()) as string).replace(/\s+/g, '');
       if (
-        (await workersBlock.filter({ hasText: / 0 Доступно / }).isVisible()) &&
-        (await truckBlock.filter({ hasText: / 0 Доступно / }).isVisible()) &&
-        (await trailerBlock.filter({ hasText: / 0 Доступно / }).isVisible()) &&
+        ((await workersBlock.filter({ hasText: / 0 Доступно / }).isVisible()) ||
+          (await truckBlock.filter({ hasText: / 0 Доступно / }).isVisible()) ||
+          (await trailerBlock.filter({ hasText: / 0 Доступно / }).isVisible())) &&
         (await actionButton.filter({ hasText: 'Завершить' }).isHidden())
       ) {
         await page.getByText('Отменить').click();
