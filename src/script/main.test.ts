@@ -1,6 +1,7 @@
 import {
   donateToSavingAccount,
   goToWarehouse,
+  rebuyTires,
   refuelAllCars,
   repairAllCars,
 } from '../utils/method';
@@ -32,7 +33,7 @@ let selectRandomWorkers: Locator;
 let selectRandomTruck: Locator;
 let selectRandomTrailer: Locator;
 let seasonBlockOnMain: Locator;
-let season: string;
+export let season: string;
 let tireChanged: number;
 let botapi;
 let timeout: number = process.env.TIMEOUT || 30;
@@ -311,11 +312,6 @@ test('main script', async ({}, testInfo) => {
     }
 
     await page.waitForLoadState('networkidle');
-    if (await redAvaliable.isVisible()) {
-      await redAvaliable.click();
-      await page.getByText('Отменить').click();
-      await page.getByText('Да, я хочу отменить эту доставку.').click();
-    }
 
     // Заправка
     if (i % 3 == 0) {
@@ -348,6 +344,11 @@ test('main script', async ({}, testInfo) => {
         await page.locator('[id="submit-trips"]').click();
         await page.waitForTimeout(1000);
       }
+    }
+
+    // Работаем с колесами
+    if (i % 5 == 0) {
+      await rebuyTires(page);
     }
 
     await page.waitForTimeout(timeout * 1000);

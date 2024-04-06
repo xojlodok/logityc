@@ -1,4 +1,5 @@
 import { Page } from '@playwright/test';
+import { season } from '../script/main.test';
 
 export const refuelAllCars = async (page: Page) => {
   let fuelStation = page.locator('[id="menuitem-fuelstation"]');
@@ -73,5 +74,34 @@ export const donateToSavingAccount = async (page: Page) => {
     await donateButton.waitFor();
     await page.locator('[id="money"]').fill('1000000');
     await donateButton.click();
+  }
+};
+
+export const rebuyTires = async (page: Page) => {
+  await page.goto('eu1/index.php?a=company_tires');
+  await page.locator('h1', { hasText: 'Гараж' }).waitFor();
+
+  let tireRow = page.locator('tbody tr', { hasText: season });
+
+  for (const tire of (await tireRow.all()).reverse()) {
+    //  Продаем старые колеса
+    if (Number((await tire.locator('td').nth(2).innerText()).replace(/[^0-9]/g, '')) <= 17) {
+      await tire.getByText('Продать').click();
+      await page.waitForTimeout(200);
+    }
+  }
+
+  let tireCount = await page.locator('tbody tr', { hasText: season }).count();
+
+  // Покупаем новые колеса если осталось 2 шт
+  if (tireCount <= 2) {
+    await page.goto('eu1/index.php?a=shopcompany&p=tires');
+    for (let q = 0; q < 10; q++) {
+      await page
+        .locator('[class="mt-action"]', { hasText: season.slice(0, -1) })
+        .getByText('Купить')
+        .click();
+      await page.waitForTimeout(200);
+    }
   }
 };
