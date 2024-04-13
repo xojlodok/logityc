@@ -59,10 +59,6 @@ test.beforeAll(async ({ browser }, testInfo) => {
   await page.getByPlaceholder('E-mail').fill(process.env.LOGIN as string);
   await page.getByPlaceholder('Пароль').fill(process.env.PASS as string);
   await page.keyboard.press('Enter');
-
-  // console.log(await (await page.waitForRequest(/index.php/)).allHeaders());
-  // console.log(await (await page.waitForResponse(/index.php/)).allHeaders());
-
   await page.locator('h1', { hasText: 'Главная' }).waitFor();
 
   seasonBlockOnMain = page
@@ -166,26 +162,19 @@ test('main script', async ({}, testInfo) => {
     await repairAllCars(page);
     await page.waitForTimeout(1000);
 
+    // Работа с заказами
     await goToWarehouse(page);
-
-    if (await redAvaliable.isVisible()) {
-      await redAvaliable.click();
-      await page.getByText('Отменить').click();
-      await page.getByText('Да, я хочу отменить эту доставку.').click();
-    }
-
     await page.waitForLoadState('networkidle');
-    let orderNumberArray = [];
+
+    let pathArray = [];
     for (const row of await rowAvaliable.all()) {
-      orderNumberArray.push(await row.locator('td').nth(4).textContent());
+      let path = (await row.getAttribute('onclick')) as string;
+      let pathSlice = path.slice(21, -2);
+      pathArray.push(pathSlice);
     }
 
-    for (const orderNumber of orderNumberArray) {
-      await page
-        .locator('tr')
-        .locator('[class="hidden-xs"]', { hasText: orderNumber })
-        .first()
-        .click();
+    for (const path of pathArray) {
+      await page.goto('eu1/' + path);
       await page.locator('h1', { hasText: 'Груз' }).waitFor();
 
       let textButton = ((await actionButton.textContent()) as string).replace(/\s+/g, '');
@@ -306,9 +295,6 @@ test('main script', async ({}, testInfo) => {
           }
           break;
       }
-
-      await warehouse.click();
-      await avaliableCountLocator.waitFor();
     }
 
     await page.waitForLoadState('networkidle');
@@ -337,9 +323,20 @@ test('main script', async ({}, testInfo) => {
       await page.waitForLoadState('networkidle');
       for (const uniqueName of uniqueTripName) {
         let trip = avaliableTrip.locator('td', { hasText: uniqueName });
-
+        // let trip2 = avaliableTrip.filter({
+        //   has: page.locator('td', { hasText: uniqueName }).first(),
+        // });
         // Выбор заказа
-        await trip.nth(getRandomInt(2)).click();
+        // let valueTrip = await trip2
+        //   .nth((await trip2.count()) - 1)
+        //   .locator('input')
+        //   .inputValue();
+        // log(valueTrip);
+        // await page.request.post('https://www.logitycoon.com/eu1/ajax/trip_accept.php', {
+        //   data: { 'freight[]': valueTrip },
+        // });
+
+        await trip.nth((await trip.count()) - 1).click();
         await page.waitForTimeout(300);
         await page.locator('[id="submit-trips"]').click();
         await page.waitForTimeout(1000);

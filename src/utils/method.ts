@@ -4,7 +4,6 @@ import { season } from '../script/main.test';
 export const refuelAllCars = async (page: Page) => {
   let fuelStation = page.locator('[id="menuitem-fuelstation"]');
   let refuelButton = page.locator('button', { hasText: 'Корпорация' });
-  // .or(page.locator('button', { hasText: 'Обычная заправка' }));
 
   await fuelStation.click();
   await page.locator('h1', { hasText: 'Заправка' }).waitFor();
@@ -13,11 +12,14 @@ export const refuelAllCars = async (page: Page) => {
 
   for (const tab of (await tabLocator.all()).reverse()) {
     await tab.click();
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('domcontentloaded');
     for (const button of (await refuelButton.all()).reverse()) {
-      await button.waitFor();
-      await button.click();
-      await page.waitForLoadState('networkidle');
+      let refId = await button.getAttribute('onclick');
+      let id = refId?.slice(8, -1);
+
+      await page.request.get(`https://www.logitycoon.com/eu1/ajax/fuelstation_refuelc.php`, {
+        params: { x: id, p: 1, returnfr: 0 },
+      });
     }
   }
 };
