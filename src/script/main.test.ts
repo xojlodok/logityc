@@ -336,7 +336,7 @@ test('main script', async ({}, testInfo) => {
         //   data: { 'freight[]': valueTrip },
         // });
 
-        await trip.nth((await trip.count()) - 1).click();
+        await trip.nth(getRandomInt((await trip.count()) - 1)).click();
         await page.waitForTimeout(300);
         await page.locator('[id="submit-trips"]').click();
         await page.waitForTimeout(1000);
