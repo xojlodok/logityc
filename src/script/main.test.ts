@@ -34,6 +34,7 @@ let selectRandomTruck: Locator;
 let selectRandomTrailer: Locator;
 let seasonBlockOnMain: Locator;
 export let season: string;
+let actualHour: number;
 let tireChanged: number;
 let botapi;
 let timeout: number = process.env.TIMEOUT || 30;
@@ -65,7 +66,8 @@ test.beforeAll(async ({ browser }, testInfo) => {
     .locator('[class="number"]', { hasText: 'Текущее время года' })
     .locator('h3');
 
-  if (testInfo.retry % 10 == 0) {
+  actualHour = new Date().getUTCHours();
+  if (testInfo.retry % 10 == 0 && actualHour < 19 && actualHour > 4) {
     await botapi.sendMessage(
       process.env.CHAT_ID as string,
       `Я запустился ${testInfo.retry} ретрай`,
@@ -127,11 +129,17 @@ test.beforeEach(async () => {
 });
 
 test('main script', async ({}, testInfo) => {
+  actualHour = new Date().getUTCHours();
   if (
     (await page.locator('[class="portlet-body captcha_portlet"]').isVisible()) &&
     testInfo.retry % 7 == 0
   ) {
-    await botapi.sendMessage(process.env.CHAT_ID as string, `ВИЖУ КАПЧУ, ПРОЙДИ ${testInfo.retry}`);
+    if (actualHour < 19 && actualHour > 4) {
+      await botapi.sendMessage(
+        process.env.CHAT_ID as string,
+        `ВИЖУ КАПЧУ, ПРОЙДИ ${testInfo.retry}`,
+      );
+    }
     await page.waitForTimeout(20000);
     expect(1).toBe(2);
   }
