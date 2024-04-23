@@ -88,7 +88,7 @@ test.beforeEach(async () => {
     .or(page.locator('[class="type6"]'))
     .or(page.locator('[class="type7"]'))
     .or(page.locator('[class="type8"]'))
-    // .or(page.locator('[class="type9"]'))
+    .or(page.locator('[class="type9"]'))
     .filter({ has: page.locator('[title="Грузовики - Доступно"]') })
     .filter({ has: page.locator('[title="Прицепы - Доступно"]') })
     .filter({ has: page.locator('[title="Сотрудники - Доступно"]') });
@@ -169,6 +169,11 @@ test('main script', async ({}, testInfo) => {
     // Ремонт
     await repairAllCars(page);
     await page.waitForTimeout(1000);
+
+    // Работаем с колесами
+    if (i % 5 == 0) {
+      await rebuyTires(page);
+    }
 
     // Работа с заказами
     await goToWarehouse(page);
@@ -349,11 +354,6 @@ test('main script', async ({}, testInfo) => {
         await page.locator('[id="submit-trips"]').click();
         await page.waitForTimeout(1000);
       }
-    }
-
-    // Работаем с колесами
-    if (i % 5 == 0) {
-      await rebuyTires(page);
     }
 
     await page.waitForTimeout(timeout * 1000);
