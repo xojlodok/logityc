@@ -1,5 +1,6 @@
 import { Page } from '@playwright/test';
 import { season } from '../script/main.test';
+import { smallTimeout } from './utils';
 
 export const refuelAllCars = async (page: Page) => {
   let fuelStation = page.locator('[id="menuitem-fuelstation"]');
@@ -13,6 +14,7 @@ export const refuelAllCars = async (page: Page) => {
   for (const tab of (await tabLocator.all()).reverse()) {
     await tab.click();
     await page.waitForLoadState('domcontentloaded');
+    await smallTimeout(page);
     for (const button of (await refuelButton.all()).reverse()) {
       let refId = await button.getAttribute('onclick');
       let id = refId?.slice(8, -1);
@@ -20,6 +22,7 @@ export const refuelAllCars = async (page: Page) => {
       await page.request.get(`https://www.logitycoon.com/eu1/ajax/fuelstation_refuelc.php`, {
         params: { x: id, p: 1, returnfr: 0 },
       });
+      await page.waitForTimeout(400);
     }
   }
 };
@@ -48,12 +51,9 @@ export const repairAllCars = async (page: Page) => {
         })
         .first()
         .click();
+      await smallTimeout(page);
     }
   }
-  // while (await activeRepairButton.first().isVisible()) {
-  // await activeRepairButton.first().click();
-  // await page.waitForTimeout(300);
-  // }
 };
 
 export const goToWarehouse = async (page: Page) => {
@@ -61,6 +61,7 @@ export const goToWarehouse = async (page: Page) => {
 
   await warehouse.click();
   await page.locator('h1', { hasText: 'Склад' }).waitFor();
+  await smallTimeout(page);
 };
 
 export const donateToSavingAccount = async (page: Page) => {
@@ -69,6 +70,7 @@ export const donateToSavingAccount = async (page: Page) => {
 
   await page.goto('/eu1/index.php?a=companybank', { waitUntil: 'commit' });
   await page.locator('h1', { hasText: 'Банковский счёт' }).waitFor();
+  await smallTimeout(page);
 
   if (await noteWarning.isHidden()) {
     await page.waitForLoadState('networkidle');
@@ -76,6 +78,7 @@ export const donateToSavingAccount = async (page: Page) => {
     await donateButton.waitFor();
     await page.locator('[id="money"]').fill('1000000');
     await donateButton.click();
+    await smallTimeout(page);
   }
 };
 
@@ -89,7 +92,7 @@ export const rebuyTires = async (page: Page) => {
     //  Продаем старые колеса
     if (Number((await tire.locator('td').nth(2).innerText()).replace(/[^0-9]/g, '')) <= 17) {
       await tire.getByText('Продать').click();
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(1000);
     }
   }
 
@@ -103,7 +106,7 @@ export const rebuyTires = async (page: Page) => {
         .locator('[class="mt-action"]', { hasText: season.slice(0, -1) })
         .getByText('Купить')
         .click();
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(1000);
     }
   }
 };

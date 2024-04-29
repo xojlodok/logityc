@@ -13,3 +13,7 @@ export function getRandomInt(max: number) {
 export async function getMyMoney(page: Page): Promise<number> {
   return Number((await page.locator('[class="balance"]').innerText()).replace(/[^0-9]/g, ''));
 }
+
+export const smallTimeout = async (page: Page) => {
+  await page.waitForTimeout(2000);
+};

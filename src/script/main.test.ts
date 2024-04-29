@@ -5,7 +5,7 @@ import {
   refuelAllCars,
   repairAllCars,
 } from '../utils/method';
-import { clickIsVisible, getMyMoney, getRandomInt } from './../utils/utils';
+import { clickIsVisible, getMyMoney, getRandomInt, smallTimeout } from './../utils/utils';
 import { Locator, Page, expect, test } from '@playwright/test';
 require('dotenv').config();
 import { Api } from 'grammy';
@@ -168,7 +168,6 @@ test('main script', async ({}, testInfo) => {
 
     // Ремонт
     await repairAllCars(page);
-    await page.waitForTimeout(1000);
 
     // Работаем с колесами
     if (i % 5 == 0) {
@@ -199,6 +198,7 @@ test('main script', async ({}, testInfo) => {
       ) {
         await page.getByText('Отменить').click();
         await page.getByText('Да, я хочу отменить эту доставку.').click();
+        await smallTimeout(page);
         continue;
       }
 
@@ -213,19 +213,23 @@ test('main script', async ({}, testInfo) => {
               await selectRandomWorkers.click();
               await selectRandomWorkers.waitFor({ state: 'hidden' });
               await page.locator('h1', { hasText: 'Груз' }).waitFor();
+              await smallTimeout(page);
             }
             if (await selectRandomTruck.isVisible()) {
               await selectRandomTruck.click();
               await selectRandomTruck.waitFor({ state: 'hidden' });
               await page.locator('h1', { hasText: 'Груз' }).waitFor();
+              await smallTimeout(page);
             }
             if (await selectRandomTrailer.isVisible()) {
               await selectRandomTrailer.click();
               await selectRandomTrailer.waitFor({ state: 'hidden' });
               await page.locator('h1', { hasText: 'Груз' }).waitFor();
+              await smallTimeout(page);
             }
             await actionButton.click();
             await page.getByText('Погрузка...').first().waitFor();
+            await smallTimeout(page);
           }
           break;
         case 'Впуть':
@@ -243,6 +247,8 @@ test('main script', async ({}, testInfo) => {
             await selectRandomWorkers.waitFor({ state: 'hidden' });
             await selectRandomTruck.waitFor({ state: 'hidden' });
             await selectRandomTrailer.waitFor({ state: 'hidden' });
+            await smallTimeout(page);
+
             let tirePercent = (
               await truckBlock
                 .locator('div', {
@@ -278,6 +284,7 @@ test('main script', async ({}, testInfo) => {
             await page.waitForLoadState('networkidle');
             await actionButton.click();
             await page.getByText(' В пути... ').first().waitFor({ timeout: 20000 });
+            await smallTimeout(page);
           }
 
           break;
@@ -291,6 +298,7 @@ test('main script', async ({}, testInfo) => {
             await page.waitForLoadState('networkidle');
             await actionButton.click();
             await page.getByText(' Разгрузка... ').first().waitFor();
+            await smallTimeout(page);
           }
           break;
         case 'Завершить':
@@ -298,6 +306,7 @@ test('main script', async ({}, testInfo) => {
             await page.waitForLoadState('networkidle');
             await actionButton.click();
             await page.getByText(' Завершение... ').first().waitFor();
+            await smallTimeout(page);
           }
           break;
         case 'Продолжитьдоставку':
@@ -305,7 +314,9 @@ test('main script', async ({}, testInfo) => {
             await page.waitForLoadState('networkidle');
             await actionButton.click();
             await page.getByText(' В пути... ').first().waitFor();
+            await smallTimeout(page);
           }
+
           break;
       }
     }
@@ -336,21 +347,9 @@ test('main script', async ({}, testInfo) => {
       await page.waitForLoadState('networkidle');
       for (const uniqueName of uniqueTripName) {
         let trip = avaliableTrip.locator('td', { hasText: uniqueName });
-        // let trip2 = avaliableTrip.filter({
-        //   has: page.locator('td', { hasText: uniqueName }).first(),
-        // });
-        // Выбор заказа
-        // let valueTrip = await trip2
-        //   .nth((await trip2.count()) - 1)
-        //   .locator('input')
-        //   .inputValue();
-        // log(valueTrip);
-        // await page.request.post('https://www.logitycoon.com/eu1/ajax/trip_accept.php', {
-        //   data: { 'freight[]': valueTrip },
-        // });
 
         await trip.nth(getRandomInt((await trip.count()) - 1)).click();
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(1000);
         await page.locator('[id="submit-trips"]').click();
         await page.waitForTimeout(1000);
       }
