@@ -15,5 +15,5 @@ export async function getMyMoney(page: Page): Promise<number> {
 }
 
 export const smallTimeout = async (page: Page) => {
-  await page.waitForTimeout(process.env.SMALLTIMEOUT || 4000);
+  await page.waitForTimeout(Number(process.env.SMALLTIMEOUT) || 4000);
 };
