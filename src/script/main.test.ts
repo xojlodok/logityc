@@ -40,7 +40,7 @@ let botapi;
 let timeout: number = process.env.TIMEOUT || 30;
 
 test.beforeAll(async ({ browser }, testInfo) => {
-  page = await browser.newPage();
+  page = await browser.newPage({ userAgent: 'AndroidApp-3.19' });
   await page.goto('?lang=ru-RU');
   context = page.context();
   // await context.addCookies([
