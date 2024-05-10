@@ -45,7 +45,7 @@ export const repairAllCars = async (page: Page) => {
     );
 
     if (persent < 80) {
-      iterator
+      await iterator
         .locator('[class="btn btn-outline blue btn-sm"]', {
           hasText: 'Ремонт',
         })

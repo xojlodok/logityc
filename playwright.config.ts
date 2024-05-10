@@ -6,7 +6,6 @@ const config: PlaywrightTestConfig = {
   retries: 999999 * 99999,
   workers: 2,
   use: {
-    userAgent: 'AndroidApp/2.1.0 (Android; Mobile; 12; MZB0DKLRU Build/SKQ1.211202.001)',
     baseURL: 'https://www.logitycoon.com/',
     actionTimeout: 30000,
     navigationTimeout: 40000,

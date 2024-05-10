@@ -37,7 +37,6 @@ export let season: string;
 let actualHour: number;
 let tireChanged: number;
 let botapi;
-let timeout: number = process.env.TIMEOUT || 30;
 
 test.beforeAll(async ({ browser }, testInfo) => {
   page = await browser.newPage({ userAgent: 'AndroidApp-3.19' });
@@ -346,16 +345,22 @@ test('main script', async ({}, testInfo) => {
 
       await page.waitForLoadState('networkidle');
       for (const uniqueName of uniqueTripName) {
-        let trip = avaliableTrip.locator('td', { hasText: uniqueName });
+        let uniqueTrip = page
+          .locator('[class="portlet light bordered"]', { hasText: 'Рекомендуемые поездки' })
+          .locator('tr', {
+            has: page.locator('td').nth(2).filter({ hasText: uniqueName }),
+          });
 
-        await trip.nth(getRandomInt((await trip.count()) - 1)).click();
-        await page.waitForTimeout(1000);
-        await page.locator('[id="submit-trips"]').click();
-        await page.waitForTimeout(1000);
+        let tripID = await uniqueTrip
+          .nth(getRandomInt(await uniqueTrip.count()) - 1)
+          .locator('input')
+          .getAttribute('value');
+        await page.request.post('https://www.logitycoon.com/eu1/ajax/trip_accept.php/', {
+          form: { 'freight[]': tripID as string },
+        });
       }
     }
 
-    await page.waitForTimeout(timeout * 1000);
     console.log(i++);
   }
 });
