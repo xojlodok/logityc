@@ -352,7 +352,7 @@ test('main script', async ({}, testInfo) => {
           });
 
         let tripID = await uniqueTrip
-          .nth(getRandomInt(await uniqueTrip.count()) - 1)
+          .nth(getRandomInt(await uniqueTrip.count()) - 2)
           .locator('input')
           .getAttribute('value');
         await page.request.post('https://www.logitycoon.com/eu1/ajax/trip_accept.php/', {
