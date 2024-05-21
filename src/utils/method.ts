@@ -4,7 +4,9 @@ import { smallTimeout } from './utils';
 
 export const refuelAllCars = async (page: Page) => {
   let fuelStation = page.locator('[id="menuitem-fuelstation"]');
-  let refuelButton = page.locator('button', { hasText: 'Корпорация' });
+  let refuelButton = page
+    .locator('button', { hasText: 'Корпорация' })
+    .or(page.locator('button', { hasText: 'Обычная заправка' }));
 
   await fuelStation.click();
   await page.locator('h1', { hasText: 'Заправка' }).waitFor();
@@ -17,12 +19,15 @@ export const refuelAllCars = async (page: Page) => {
     await smallTimeout(page);
     for (const button of (await refuelButton.all()).reverse()) {
       let refId = await button.getAttribute('onclick');
-      let id = refId?.slice(8, -1);
+      let id = refId?.replace(/[^0-9]/g, '');
 
       await page.request.get(`https://www.logitycoon.com/eu1/ajax/fuelstation_refuelc.php`, {
         params: { x: id, p: 1, returnfr: 0 },
       });
-      await page.waitForTimeout(400);
+
+      await page.request.get(`https://www.logitycoon.com/eu1/ajax/fuelstation_refuel.php`, {
+        params: { x: id, p: 1, returnfr: 0 },
+      });
     }
   }
 };

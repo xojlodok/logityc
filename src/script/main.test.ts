@@ -108,12 +108,14 @@ test.beforeEach(async () => {
   selectRandomWorkers = workersBlock
     .filter({ hasText: /Доступно/ })
     .filter({ hasNotText: / 0 Доступно / })
+    .filter({ hasNotText: / Спит/ })
     .getByText('Случайный');
 
   truckBlock = page.locator('[class="portlet purple-plum box"]');
   selectRandomTruck = truckBlock
     .filter({ hasText: /Доступно/ })
     .filter({ hasNotText: / 0 Доступно / })
+    .filter({ hasNotText: / Спит/ })
     .getByText('Случайный');
 
   trailerBlock = page.locator('[class="portlet red-sunglo box"]');
@@ -152,6 +154,26 @@ test('main script', async ({}, testInfo) => {
       season = 'Зима';
       break;
   }
+
+  // await page.goto('https://www.logitycoon.com/eu1/index.php?a=fuelstation&f=5&t=0');
+  // await page.pause();
+  // for (let i = 4977; i < 1000000; i++) {
+  //   let data = await (
+  //     await page.request.get(`https://www.logitycoon.com/eu1/ajax/fuelstation_refuelall.php`, {
+  //       params: { x: i, l: 'c', returnfr: '0' },
+  //     })
+  //   ).json();
+  //   if (
+  //     data.fullerror !=
+  //     'У вашей компании нет грузовиков в этой стране, которые нуждаются в заправке!'
+  //   ) {
+  //     await botapi.sendMessage(process.env.CHAT_ID as string, i + data.fullerror);
+  //     console.log(data.fullerror, i);
+  //     await expect(1, { message: `${i.toString()}, ${data.fullerror} ` }).toBe(2);
+  //   }
+  //   console.log('не то', i);
+  // }
+  // await page.pause();
 
   while (true) {
     if ((await getMyMoney(page)) > 5000000) {
@@ -206,6 +228,7 @@ test('main script', async ({}, testInfo) => {
           if (
             (await workersBlock.filter({ hasText: 'Заболел' }).isHidden()) &&
             (await workersBlock.filter({ hasText: / 0 Доступно / }).isHidden()) &&
+            (await workersBlock.filter({ hasText: / Спит / }).isHidden()) &&
             (await trailerBlock.filter({ hasText: / 0 Доступно / }).isHidden())
           ) {
             if (await selectRandomWorkers.isVisible()) {
@@ -238,7 +261,8 @@ test('main script', async ({}, testInfo) => {
             (await selectRandomTrailer.isVisible()) ||
             ((await truckBlock.filter({ hasText: 'Заправка' }).isHidden()) &&
               (await truckBlock.filter({ hasText: 'Обслуживается' }).isHidden()) &&
-              (await workersBlock.filter({ hasText: 'Заболел' }).isHidden()))
+              (await workersBlock.filter({ hasText: 'Заболел' }).isHidden()) &&
+              (await workersBlock.filter({ hasText: 'Спит' }).isHidden()))
           ) {
             await clickIsVisible(selectRandomWorkers);
             await clickIsVisible(selectRandomTruck);
