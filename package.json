@@ -3,7 +3,8 @@
   "scripts": {
     "lint": "eslint src/ --ext .ts",
     "main": "npx playwright test -g @main",
-    "refuel": "npx playwright test -g refuel"
+    "refuel": "npx playwright test -g @refuel",
+    "upgradeEmployee": "npx playwright test -g @upgradeEmployee"
   },
   "devDependencies": {
     "@playwright/test": "1.42.0",

@@ -5,6 +5,7 @@ import {
   rebuyTires,
   refuelAllCars,
   repairAllCars,
+  upgradeEmployee,
 } from '../utils/method';
 import { clickIsVisible, getMyMoney, getRandomInt, smallTimeout } from './../utils/utils';
 import { Locator, Page, expect, test } from '@playwright/test';
@@ -350,7 +351,7 @@ test('@main script', async ({}, testInfo) => {
   }
 });
 
-test('refuel corporation', async () => {
+test('@refuel corporation', async () => {
   await page.goto('/eu1/index.php?a=concernbuildings&t=concernoilrefineries');
   do {
     // Заправляем всё Сырой нефтью
@@ -387,4 +388,8 @@ test('refuel corporation', async () => {
 
     await page.waitForTimeout(60 * 1000);
   } while (true);
+});
+
+test('@upgradeEmployee', async () => {
+  await upgradeEmployee(page);
 });

@@ -127,3 +127,24 @@ export async function blockUselessRequests(page: Page) {
   await page.route(/content.css/, route => route.abort());
   await page.route(/fonts.googleapis.com/, route => route.abort());
 }
+
+export async function upgradeEmployee(page: Page) {
+  let employeesUrl = '/eu1/index.php?a=employees';
+  let trDriver = page.locator('.portlet', { hasText: 'Водители' }).locator('tr');
+  let trLowDriver = trDriver.filter({ hasNotText: 'Тяжелый' }).filter({ hasText: 'Ничего' });
+
+  await page.goto(employeesUrl);
+  await page.locator('h1', { hasText: 'Ваши сотрудники' }).waitFor();
+  for (const lowDriver of (await trLowDriver.all()).reverse()) {
+    await lowDriver.click();
+    await page.locator('h1', { hasText: 'Сотрудники - Информация' }).waitFor();
+    await page.getByText('Улучшить').click();
+    await page.locator('h1', { hasText: ' Сотрудники - Водительские права' }).waitFor();
+    while (await page.getByText('Экзамен').isVisible()) {
+      await page.getByText('Экзамен').click();
+      await page.waitForLoadState('networkidle');
+    }
+    await page.goto(employeesUrl);
+    await page.locator('h1', { hasText: 'Ваши сотрудники' }).waitFor();
+  }
+}
