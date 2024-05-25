@@ -115,3 +115,15 @@ export const rebuyTires = async (page: Page) => {
     }
   }
 };
+
+export async function blockUselessRequests(page: Page) {
+  await page.route(/googlesyndication/, route => route.abort());
+  await page.route(/responsive.css/, route => route.abort());
+  await page.route(/extra.css/, route => route.abort());
+  await page.route(/simple-line-icons.css/, route => route.abort());
+  await page.route(/logo.png/, route => route.abort());
+  await page.route(/FontAwesome.min.css/, route => route.abort());
+  await page.route(/content_style.css/, route => route.abort());
+  await page.route(/content.css/, route => route.abort());
+  await page.route(/fonts.googleapis.com/, route => route.abort());
+}

@@ -2,7 +2,8 @@
   "license": "ISC",
   "scripts": {
     "lint": "eslint src/ --ext .ts",
-    "main": "npx playwright test main"
+    "main": "npx playwright test -g @main",
+    "refuel": "npx playwright test -g refuel"
   },
   "devDependencies": {
     "@playwright/test": "1.42.0",

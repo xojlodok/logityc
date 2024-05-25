@@ -1,4 +1,5 @@
 import {
+  blockUselessRequests,
   donateToSavingAccount,
   goToWarehouse,
   rebuyTires,
@@ -35,31 +36,19 @@ let selectRandomTrailer: Locator;
 let seasonBlockOnMain: Locator;
 export let season: string;
 let actualHour: number;
-let tireChanged: number;
 let botapi;
 
+// Авторизация + установка сезона
 test.beforeAll(async ({ browser }, testInfo) => {
   page = await browser.newPage({ userAgent: 'AndroidApp-3.19' });
-  await page.goto('?lang=ru-RU');
-  context = page.context();
-  // await context.addCookies([
-  //   { name: 'eu1_extracheck', value: '0', domain: 'www.logitycoon.com', path: '/' },
-  // ]);
-
   botapi = new Api(process.env.BOT_TOKEN as string);
-  await page.route(/googlesyndication/, route => route.abort());
-  await page.route(/responsive.css/, route => route.abort());
-  await page.route(/extra.css/, route => route.abort());
-  await page.route(/simple-line-icons.css/, route => route.abort());
-  await page.route(/logo.png/, route => route.abort());
-  await page.route(/FontAwesome.min.css/, route => route.abort());
-  await page.route(/content_style.css/, route => route.abort());
-  await page.route(/content.css/, route => route.abort());
-  await page.route(/fonts.googleapis.com/, route => route.abort());
-  await page.getByPlaceholder('E-mail').fill(process.env.LOGIN as string);
-  await page.getByPlaceholder('Пароль').fill(process.env.PASS as string);
-  await page.keyboard.press('Enter');
-  await page.locator('h1', { hasText: 'Главная' }).waitFor();
+
+  await blockUselessRequests(page);
+  await page.request.post('https://www.logitycoon.com/eu1/process_login.php', {
+    form: { email: process.env.LOGIN as string, password: process.env.PASS as string },
+    params: { lang: 'ru-RU' },
+  });
+  await page.goto('/eu1/');
 
   seasonBlockOnMain = page
     .locator('[class="number"]', { hasText: 'Текущее время года' })
@@ -74,6 +63,7 @@ test.beforeAll(async ({ browser }, testInfo) => {
   }
 });
 
+// Локаторы
 test.beforeEach(async () => {
   warehouse = page.locator('[id="menuitem-warehouse"]');
   avaliableCountLocator = page.locator('[id="tripsavailableamount"]');
@@ -126,10 +116,9 @@ test.beforeEach(async () => {
 
   actionTitle = page.locator('[class="portlet-title"]').first();
   actionButton = actionTitle.locator('button').first();
-  tireChanged = 0;
 });
 
-test('main script', async ({}, testInfo) => {
+test('@main script', async ({}, testInfo) => {
   actualHour = new Date().getUTCHours();
   if (
     (await page.locator('[class="portlet-body captcha_portlet"]').isVisible()) &&
@@ -155,37 +144,10 @@ test('main script', async ({}, testInfo) => {
       break;
   }
 
-  // await page.goto('https://www.logitycoon.com/eu1/index.php?a=fuelstation&f=5&t=0');
-  // await page.pause();
-  // for (let i = 4977; i < 1000000; i++) {
-  //   let data = await (
-  //     await page.request.get(`https://www.logitycoon.com/eu1/ajax/fuelstation_refuelall.php`, {
-  //       params: { x: i, l: 'c', returnfr: '0' },
-  //     })
-  //   ).json();
-  //   if (
-  //     data.fullerror !=
-  //     'У вашей компании нет грузовиков в этой стране, которые нуждаются в заправке!'
-  //   ) {
-  //     await botapi.sendMessage(process.env.CHAT_ID as string, i + data.fullerror);
-  //     console.log(data.fullerror, i);
-  //     await expect(1, { message: `${i.toString()}, ${data.fullerror} ` }).toBe(2);
-  //   }
-  //   console.log('не то', i);
-  // }
-  // await page.pause();
-
   while (true) {
     if ((await getMyMoney(page)) > 5000000) {
       await donateToSavingAccount(page);
     }
-
-    // Проверка контракта на починку
-
-    // await contracts.click();
-    // await page.locator('h1', { hasText: 'Контракты' }).waitFor();
-    // await page.locator('.portlet', { hasText: 'Принятые контракты' }).locator();
-    // TODO ТУТ Я ДЕЛАЮ ПРОВЕРКУ НА КОНТРАКТЫ И ПУЛЧЕНИЕ
 
     // Ремонт
     await repairAllCars(page);
@@ -298,10 +260,9 @@ test('main script', async ({}, testInfo) => {
                 .click();
               await page.locator('tr', { hasText: season }).last().getByText('Выбрать').click();
               await page.locator('h1', { hasText: 'Грузовик - Информация' }).waitFor();
-              tireChanged++;
               await page.goto(url, { waitUntil: 'networkidle' });
               await actionButton.waitFor();
-              await page.waitForTimeout(2000);
+              await page.waitForTimeout(1000);
             }
 
             await page.waitForLoadState('networkidle');
@@ -387,4 +348,43 @@ test('main script', async ({}, testInfo) => {
 
     console.log(i++);
   }
+});
+
+test('refuel corporation', async () => {
+  await page.goto('/eu1/index.php?a=concernbuildings&t=concernoilrefineries');
+  do {
+    // Заправляем всё Сырой нефтью
+    for (const refuel of await page.locator('[method="POST"]').all()) {
+      await page.request.post('eu1/index.php?a=concernbuildings&t=concernoilrefineries_refill', {
+        form: { refill: await refuel.locator('[name="refill"]').getAttribute('value') },
+      });
+    }
+    // Отправляем топливо на заправки, если оно больше minBenzinCount значeния
+    for (const iterator of (
+      await page.locator('tr', { hasText: /литров \/ час/ }).all()
+    ).reverse()) {
+      let benzinCount = Number(
+        await iterator.locator('td').nth(3).locator('input').getAttribute('value'),
+      );
+      let minBenzinCount = Number(process.env.MINBENZINCOUNT) || 1000;
+
+      if (benzinCount > minBenzinCount) {
+        await iterator.getByText('Транспортировать').click();
+        await page.getByText('Нефтеперерабатывающие заводы').waitFor();
+        await page.waitForLoadState('networkidle');
+        // Отправляем бензин, если заправка не переполнена
+        if (await page.locator('[id="country1"]', { hasText: 'Полный' }).isHidden()) {
+          await page.getByText('Быстрая доставка').click();
+          await page.locator('[name="accept"]').click();
+          await page.locator('h1', { hasText: 'Здания' }).first().waitFor();
+          await page.waitForLoadState('networkidle');
+        } else {
+          await page.goto('/eu1/index.php?a=concernbuildings&t=concernoilrefineries');
+          continue;
+        }
+      }
+    }
+
+    await page.waitForTimeout(60 * 1000);
+  } while (true);
 });
