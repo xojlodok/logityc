@@ -5,6 +5,7 @@ const config: PlaywrightTestConfig = {
   testDir: 'src',
   retries: 999999 * 99999,
   workers: 2,
+  reporter: 'null',
   use: {
     baseURL: 'https://www.logitycoon.com/',
     actionTimeout: 30000,
