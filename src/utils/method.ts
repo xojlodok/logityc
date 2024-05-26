@@ -69,6 +69,11 @@ export const goToWarehouse = async (page: Page) => {
   await smallTimeout(page);
 };
 
+export const goToGarage = async (page: Page) => {
+  await page.goto('eu1/index.php?a=garage');
+  await page.locator('h1', { hasText: 'Гараж' }).waitFor();
+};
+
 export const donateToSavingAccount = async (page: Page) => {
   let donateButton = page.locator('[type="submit"]', { hasText: 'Сберегательный счет' });
   let noteWarning = page.locator('[class="note note-warning"]');

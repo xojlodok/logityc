@@ -1,6 +1,8 @@
+import { log } from 'console';
 import {
   blockUselessRequests,
   donateToSavingAccount,
+  goToGarage,
   goToWarehouse,
   rebuyTires,
   refuelAllCars,
@@ -353,6 +355,35 @@ test('@main script', async ({}, testInfo) => {
 
 test('@refuel corporation', async () => {
   await page.goto('/eu1/index.php?a=concernbuildings&t=concernoilrefineries');
+
+  // // Улучшаем заправки
+  // await page.goto('eu1/index.php?a=concernbuildings&t=concernfuelstations');
+  // for (const upgradeButton of (
+  //   await page.locator('[class="tab-content"]').getByText('Улучшить').all()
+  // ).reverse()) {
+  //   await page.request.post('eu1/ajax/concernfuelstations_upgrade.php', {
+  //     form: { upgrade: (await upgradeButton.getAttribute('onclick')).replace(/[^0-9]/g, '') },
+  //   });
+  // }
+
+  // Улучшаем Нефтеперерабатывающие заводы
+  // await page.goto('/eu1/index.php?a=concernoilrefineries_upgrade');
+  // for (const upgradeButton of (
+  //   await page.locator('[class="tab-pane active"] [name="upgrade"]').all()
+  // ).reverse()) {
+  //   await upgradeButton.click();
+  //   await page.waitForLoadState('load');
+  // }
+  // await page.getByText('Топливо').first().click();
+  // for (const upgradeButton of (await page.locator('[name="upgrade"]').all()).reverse()) {
+  //   await page.request.post(
+  //     'eu1/index.php?a=concernbuildings&t=concernoilrefineries_upgradecapfuel',
+  //     {
+  //       form: { upgrade: await upgradeButton.getAttribute('value') },
+  //     },
+  //   );
+  // }
+
   do {
     // Заправляем всё Сырой нефтью
     for (const refuel of await page.locator('[method="POST"]').all()) {
@@ -392,4 +423,209 @@ test('@refuel corporation', async () => {
 
 test('@upgradeEmployee', async () => {
   await upgradeEmployee(page);
+});
+
+test('@updateTruck', async () => {
+  // Получаем город головного офиса
+  await page.goto('https://www.logitycoon.com/eu1/index.php?a=companyoverviewprivate');
+  let headCountry = (await page.locator('[class="profile-usertitle-job"]').innerText()).replace(
+    /Удалить компанию/,
+    '',
+  );
+  let newTruckBlock = page
+    .locator('[class="portlet light "]', { hasText: 'Грузовики' })
+    .locator('[class="mt-action"]');
+  let freeTruck = newTruckBlock.filter({ hasText: 'Ничего' });
+  let newTruckReady = newTruckBlock
+    .filter({ hasNotText: 'Будет доставлено' })
+    .filter({ hasText: headCountry })
+    .filter({ hasText: '1 дней назад' });
+  let newTruckDelivery = newTruckBlock
+    .filter({ hasText: 'Будет доставлено' })
+    .filter({ hasText: headCountry })
+    .filter({ hasText: '1 дней назад' });
+  let navInstallButton = page.locator('[id="navinstall"]', { hasText: 'Собрать' });
+  let ftlockinstall = page.locator('[id="ftlockinstall"]', { hasText: 'Собрать' });
+
+  async function buyNewtruck(page: Page, truckId: number) {
+    await page.request.post('https://www.logitycoon.com/eu1/index.php?a=truckstore', {
+      form: { buytruck: truckId },
+    });
+  }
+
+  await goToGarage(page);
+
+  for (const truck of await newTruckBlock.all()) {
+    let daysAgo: number = String(await truck.getByText(/дней назад/).textContent()).replace(
+      /[^0-9]/g,
+      '',
+    );
+
+    if (daysAgo >= 15) {
+      await truck.getByText('Информация').first().click();
+      await page.locator('h1', { hasText: 'Грузовик - Информация' }).waitFor();
+
+      let actualCountry = await page
+        .locator('[class="row static-info"]', { has: page.locator('img') })
+        .locator('div')
+        .nth(1)
+        .innerText();
+      let truckId = (
+        (await page.locator('.portlet').locator('img').first().getAttribute('src')) as string
+      ).replace(/[^0-9]/g, '');
+
+      await page.getByText('Продать автосалону').click();
+      await page.waitForTimeout(500);
+      await page.getByText('Продать автосалону??').waitFor();
+      await page.waitForTimeout(500);
+      await page.getByText('Да', { exact: true }).click();
+      await botapi.sendMessage(
+        process.env.CHAT_ID as string,
+        `Продал truck ${truckId} из ${actualCountry}`,
+      );
+      await page.waitForTimeout(500);
+      await page.locator('h1', { hasText: 'Гараж' }).waitFor();
+
+      if (await newTruckReady.first().isVisible()) {
+        await newTruckReady.first().getByText('Информация').first().click();
+        await page.locator('h1', { hasText: 'Грузовик - Информация' }).waitFor();
+      } else if (await newTruckDelivery.first().isVisible()) {
+        await newTruckDelivery.first().getByText('Информация').first().click();
+        await page.locator('h1', { hasText: 'Грузовик - Информация' }).waitFor();
+        await page.locator('[id="ready1"]').waitFor({ state: 'hidden', timeout: 3 * 65 * 1000 });
+        await page.waitForTimeout(2000);
+      } else {
+        await buyNewtruck(page, Number(truckId));
+        await page.reload();
+        await newTruckDelivery.first().getByText('Информация').first().click();
+        await page.locator('h1', { hasText: 'Грузовик - Информация' }).waitFor();
+        await page.locator('[id="ready1"]').waitFor({ state: 'hidden', timeout: 3 * 65 * 1000 });
+        await page.waitForTimeout(2000);
+      }
+
+      // Устанавливам навигатор
+      if (await navInstallButton.isVisible()) {
+        await navInstallButton.click();
+        await navInstallButton.waitFor({ state: 'hidden' });
+      }
+      // Устанавливам замок топливного бака
+      if (await ftlockinstall.isVisible()) {
+        await ftlockinstall.click();
+        await ftlockinstall.waitFor({ state: 'hidden' });
+      }
+
+      await page.getByText('Перемещение').click();
+      await page.getByText('Transferio').waitFor();
+
+      let optionValue = await page
+        .locator('option', { hasText: actualCountry })
+        .getAttribute('value');
+      await page
+        .locator('select', { hasText: 'Пожалуйста, выберите город..' })
+        .selectOption(optionValue);
+      await page.getByText('Начать перемещение').click();
+      await botapi.sendMessage(
+        process.env.CHAT_ID as string,
+        `Отправил truck ${truckId} в ${actualCountry}`,
+      );
+
+      break;
+    }
+  }
+});
+
+test('@updateTrailer', async () => {
+  // Получаем город головного офиса
+  await page.goto('https://www.logitycoon.com/eu1/index.php?a=companyoverviewprivate');
+  let headCountry = (await page.locator('[class="profile-usertitle-job"]').innerText()).replace(
+    /Удалить компанию/,
+    '',
+  );
+  let newTrailerBlock = page
+    .locator('[class="portlet light "]', { hasText: 'Прицепы' })
+    .locator('[class="mt-action"]');
+  let freeTrailer = newTrailerBlock.filter({ hasText: 'Ничего' });
+  let newTrailerReady = newTrailerBlock
+    .filter({ hasNotText: 'Будет доставлено' })
+    .filter({ hasText: headCountry })
+    .filter({ hasText: '1 дней назад' });
+
+  let newTrailerDelivery = newTrailerBlock
+    .filter({ hasText: 'Будет доставлено' })
+    .filter({ hasText: headCountry })
+    .filter({ hasText: '1 дней назад' });
+
+  async function buyNewtruck(page: Page, trailerId: number) {
+    await page.request.post('https://www.logitycoon.com/eu1/index.php?a=trailerstore', {
+      form: { buytrailer: trailerId },
+    });
+  }
+  await goToGarage(page);
+
+  for (const trailer of await newTrailerBlock.all()) {
+    let daysAgo: number = String(await trailer.getByText(/дней назад/).textContent()).replace(
+      /[^0-9]/g,
+      '',
+    );
+
+    if (daysAgo >= 15) {
+      await trailer.getByText('Информация').first().click();
+      await page.locator('h1', { hasText: 'Прицеп - Информация' }).waitFor();
+
+      let actualCountry = await page
+        .locator('[class="row static-info"]', { has: page.locator('img') })
+        .locator('div')
+        .nth(1)
+        .innerText();
+      let trailerId = (
+        (await page.locator('.portlet').locator('img').first().getAttribute('src')) as string
+      ).replace(/[^0-9]/g, '');
+
+      await page.getByText('Продать автосалону').click();
+      await page.waitForTimeout(1000);
+      await page.getByText('Продать автосалону??', { exact: true }).waitFor();
+      await page.waitForTimeout(1000);
+      await page.getByText('Да', { exact: true }).click();
+      await botapi.sendMessage(
+        process.env.CHAT_ID as string,
+        `Продал trailer ${trailerId} из ${actualCountry}`,
+      );
+      await page.waitForTimeout(500);
+      await page.locator('h1', { hasText: 'Гараж' }).waitFor();
+
+      if (await newTrailerReady.first().isVisible()) {
+        await newTrailerReady.first().getByText('Информация').first().click();
+        await page.locator('h1', { hasText: 'Прицеп - Информация' }).waitFor();
+      } else if (await newTrailerDelivery.first().isVisible()) {
+        await newTrailerDelivery.first().getByText('Информация').first().click();
+        await page.locator('h1', { hasText: 'Прицеп - Информация' }).waitFor();
+        await page.locator('[id="ready1"]').waitFor({ state: 'hidden', timeout: 3 * 65 * 1000 });
+        await page.waitForTimeout(2000);
+      } else {
+        await buyNewtruck(page, Number(trailerId));
+        await page.reload();
+        await newTrailerDelivery.first().getByText('Информация').first().click();
+        await page.locator('h1', { hasText: 'Прицеп - Информация' }).waitFor();
+        await page.locator('[id="ready1"]').waitFor({ state: 'hidden', timeout: 3 * 65 * 1000 });
+        await page.waitForTimeout(2000);
+      }
+
+      await page.getByText('Перемещение').click();
+      await page.getByText('Transferio').waitFor();
+
+      let optionValue = await page
+        .locator('option', { hasText: actualCountry })
+        .getAttribute('value');
+      await page
+        .locator('select', { hasText: 'Пожалуйста, выберите город..' })
+        .selectOption(optionValue);
+      await page.getByText('Начать перемещение').click();
+      await botapi.sendMessage(
+        process.env.CHAT_ID as string,
+        `Отправил trailer ${trailerId} в ${actualCountry}`,
+      );
+
+      break;
+    }
+  }
 });
