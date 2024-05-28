@@ -386,10 +386,28 @@ test('@refuel corporation', async () => {
 
   do {
     // Заправляем всё Сырой нефтью
-    for (const refuel of await page.locator('[method="POST"]').all()) {
-      await page.request.post('eu1/index.php?a=concernbuildings&t=concernoilrefineries_refill', {
-        form: { refill: await refuel.locator('[name="refill"]').getAttribute('value') },
-      });
+    const refuelOiltr = page
+      .locator('.portlet', { hasText: 'Заправить (Сырая нефть)' })
+      .locator('tbody')
+      .locator('tr');
+
+    for (const refuelRow of await refuelOiltr.all()) {
+      let fuelPrice = ((await refuelRow.locator('td').nth(2).textContent()) as string).slice(
+        3,
+        -10,
+      );
+      let fuelCount = (
+        (await refuelRow.locator('[class="rangeslider-output"]').textContent()) as string
+      ).replace(/\D/g, '');
+
+      if (
+        (Number(fuelPrice) <= 50 || Number(fuelCount) <= 200) &&
+        (await refuelRow.locator('[title="Полный"]').isHidden())
+      ) {
+        await page.request.post('eu1/index.php?a=concernbuildings&t=concernoilrefineries_refill', {
+          form: { refill: await refuelRow.locator('[name="refill"]').getAttribute('value') },
+        });
+      }
     }
     // Отправляем топливо на заправки, если оно больше minBenzinCount значeния
     for (const iterator of (

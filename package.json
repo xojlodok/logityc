@@ -4,7 +4,9 @@
     "lint": "eslint src/ --ext .ts",
     "main": "npx playwright test -g @main",
     "refuel": "npx playwright test -g @refuel",
-    "upgradeEmployee": "npx playwright test -g @upgradeEmployee"
+    "upgradeEmployee": "npx playwright test -g @upgradeEmployee",
+    "updateTruck": "npx playwright test -g @updateTruck",
+    "updateTrailer": "npx playwright test -g @updateTrailer"
   },
   "devDependencies": {
     "@playwright/test": "1.42.0",
