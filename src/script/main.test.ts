@@ -399,11 +399,18 @@ test('@refuel corporation', async () => {
       let fuelCount = (
         (await refuelRow.locator('[class="rangeslider-output"]').textContent()) as string
       ).replace(/\D/g, '');
+      let countryName = await refuelRow.locator('td').first().innerText();
 
       if (
         (Number(fuelPrice) <= 50 || Number(fuelCount) <= 200) &&
         (await refuelRow.locator('[title="Полный"]').isHidden())
       ) {
+        if (Number(fuelPrice) >= 50) {
+          await botapi.sendMessage(
+            process.env.CHAT_ID as string,
+            `Купил бенз за оверпрайс ${fuelPrice} из ${countryName}`,
+          );
+        }
         await page.request.post('eu1/index.php?a=concernbuildings&t=concernoilrefineries_refill', {
           form: { refill: await refuelRow.locator('[name="refill"]').getAttribute('value') },
         });
