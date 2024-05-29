@@ -405,7 +405,7 @@ test('@refuel corporation', async () => {
         (Number(fuelPrice) <= 50 || Number(fuelCount) <= 200) &&
         (await refuelRow.locator('[title="Полный"]').isHidden())
       ) {
-        if (Number(fuelPrice) >= 50) {
+        if (Number(fuelPrice) > 50) {
           await botapi.sendMessage(
             process.env.CHAT_ID as string,
             `Купил бенз за оверпрайс ${fuelPrice} из ${countryName}`,
