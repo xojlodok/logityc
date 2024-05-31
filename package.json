@@ -6,7 +6,7 @@
     "refuel": "npx playwright test -g @refuel",
     "upgradeEmployee": "npx playwright test -g @upgradeEmployee",
     "updateTruck": "npx playwright test -g @updateTruck",
-    "updateTrailer": "npx playwright test -g @updateTrailer"
+    "updateTrailer": "npx playwright test -g @updateTrailer --retries=0"
   },
   "devDependencies": {
     "@playwright/test": "1.42.0",

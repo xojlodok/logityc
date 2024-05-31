@@ -148,6 +148,9 @@ test('@main script', async ({}, testInfo) => {
   }
 
   while (true) {
+    // await page.goto('https://www.logitycoon.com/eu1/index.php?a=freight&n=55850753');
+    // await page.locator('[type="text/javascript"]').last().innerText();
+
     if ((await getMyMoney(page)) > 5000000) {
       await donateToSavingAccount(page);
     }
@@ -410,9 +413,19 @@ test('@refuel corporation', async () => {
             process.env.CHAT_ID as string,
             `Купил бенз за оверпрайс ${fuelPrice} из ${countryName}`,
           );
+          await page.request.post(
+            'eu1/index.php?a=concernbuildings&t=concernoilrefineries_upgradecapcrudeoil',
+            {
+              form: {
+                upgrade: Number(await refuelRow.locator('[name="refill"]').getAttribute('value')),
+              },
+            },
+          );
         }
         await page.request.post('eu1/index.php?a=concernbuildings&t=concernoilrefineries_refill', {
-          form: { refill: await refuelRow.locator('[name="refill"]').getAttribute('value') },
+          form: {
+            refill: (await refuelRow.locator('[name="refill"]').getAttribute('value')) as string,
+          },
         });
       }
     }
@@ -451,6 +464,7 @@ test('@upgradeEmployee', async () => {
 });
 
 test('@updateTruck', async () => {
+  test.setTimeout(60 * 1000);
   // Получаем город головного офиса
   await page.goto('https://www.logitycoon.com/eu1/index.php?a=companyoverviewprivate');
   let headCountry = (await page.locator('[class="profile-usertitle-job"]').innerText()).replace(
@@ -560,6 +574,8 @@ test('@updateTruck', async () => {
 });
 
 test('@updateTrailer', async () => {
+  test.setTimeout(60 * 1000);
+
   // Получаем город головного офиса
   await page.goto('https://www.logitycoon.com/eu1/index.php?a=companyoverviewprivate');
   let headCountry = (await page.locator('[class="profile-usertitle-job"]').innerText()).replace(
